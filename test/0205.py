@@ -132,11 +132,11 @@ pred_dict[name] = [y_pred, y_test]
 #     train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std
 # ]
 
-# draw_learning_curve_total(learning_curve_values_dict, "train")
-# draw_learning_curve_total(learning_curve_values_dict, "validation")
+draw_learning_curve_total(learning_curve_values_dict, "train")
+draw_learning_curve_total(learning_curve_values_dict, "validation")
 
 # draw_pred_total(pred_dict)
 
 # Save the info of predictive analysis to a json format file
-with open("./data/total_info.json", "w", encoding="utf-8") as f:
+with open("../data/total_info.json", "w", encoding="utf-8") as f:
     json.dump(total_info, f, indent=4, ensure_ascii=False)

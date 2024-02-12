@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from coding.llh.static.config import Config
+from static.config import Config
 
 
 # draw line graph

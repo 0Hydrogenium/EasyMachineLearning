@@ -1,11 +1,11 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from coding.llh.static.config import Config
+from static.config import Config
 
 
 def draw_learning_curve_total(input_dict, type):
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 6), dpi=300)
 
     if type == "train":
         i = 0
@@ -70,8 +70,7 @@ def draw_learning_curve_total(input_dict, type):
     plt.ylabel("Adjusted R-square")
     plt.legend()
 
-    plt.savefig("./diagram/{}.png".format(title), dpi=300)
-
-    plt.show()
-
+    # plt.savefig("./diagram/{}.png".format(title), dpi=300)
+    # plt.show()
+    return plt
 

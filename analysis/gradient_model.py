@@ -5,7 +5,7 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import learning_curve
 import numpy as np
 
-from coding.llh.analysis.shap_model import shap_calculate
+from analysis.shap_model import shap_calculate
 from coding.llh.static.config import Config
 from coding.llh.static.process import grid_search, bayes_search
 from coding.llh.visualization.draw_learning_curve import draw_learning_curve
@@ -66,7 +66,7 @@ def gradient_boosting_regression(feature_names, x, y, x_train_and_validate, y_tr
     # info.update(calculate_classification_metrics(y_pred, y_test, "logistic regression"))
     # mae, mse, rsme, r2, ar2 = calculate_regression_metrics(y_pred, y_test, model_name)
 
-    # shap_calculate(best_model, x[:1000], feature_names)
+    shap_calculate(best_model, x[:1000], feature_names)
 
     # return y_pred, info
     return y_pred, info, train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std

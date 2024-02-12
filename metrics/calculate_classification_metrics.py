@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import *
 from sklearn.preprocessing import label_binarize
 
-from coding.llh.visualization.draw_line_graph import draw_line_graph
+from visualization.draw_line_graph import draw_line_graph
 
 
 def calculate_classification_metrics(pred_data, real_data, model_name):

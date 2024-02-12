@@ -33,7 +33,7 @@ pd.set_option('display.max_colwidth', 1000)
 total_info = {}
 
 # 读取excel
-df = pd.read_csv("./data/Wimbledon_featured_matches.csv")
+df = pd.read_csv("../data/Wimbledon_featured_matches.csv")
 
 df, new_info = preprocess_raw_data_filtering(copy.deepcopy(df))
 total_info.update(new_info)
@@ -412,7 +412,7 @@ total_df.to_csv("./data/after_momentum_value_all.csv", index=False)
 # array = df.values
 #
 # # segment the whole dataset into total train dataset and test dataset
-# x_train_and_validate, x_test, y_train_and_validate, y_test = split_dataset(array)
+x_train_and_validate, x_test, y_train_and_validate, y_test = split_dataset(array)
 #
 # # segment train dataset into train datasets and validate datasets
 # # train_and_validate_data_list = k_fold_cross_validation_data_segmentation(x_train_and_validate, y_train_and_validate)
@@ -475,7 +475,7 @@ total_df.to_csv("./data/after_momentum_value_all.csv", index=False)
 # print("f1_score_dict"+str(f1_score_dict))
 #
 # Save the info of predictive analysis to a json format file
-with open("./data/total_info.json", "w", encoding="utf-8") as f:
+with open("../data/total_info.json", "w", encoding="utf-8") as f:
     json.dump(total_info, f, indent=4, ensure_ascii=False)
 
 

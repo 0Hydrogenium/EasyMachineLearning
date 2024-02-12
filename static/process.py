@@ -13,7 +13,7 @@ from sklearn.datasets import load_wine
 from sklearn.datasets import load_breast_cancer
 from scipy.linalg import eig
 
-from coding.llh.static.config import Config
+from static.config import Config
 
 
 def match_split(df: pd.DataFrame):
