@@ -12,6 +12,9 @@ class Config:
         "#EF8B67",
         "#F0C284"
     ]
+
+
+
     COLORS_1 = [
         "#91CCC0",
         "#7FABD1",

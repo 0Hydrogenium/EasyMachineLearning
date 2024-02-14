@@ -196,7 +196,10 @@ def load_data(sort):
 
 
 def load_custom_data(file):
-    return pd.read_csv(file)
+    if "xlsx" in file or "xls" in file:
+        return pd.read_excel(file)
+    elif "csv" in file:
+        return pd.read_csv(file)
 
 
 def preprocess_raw_data_filtering(df):
