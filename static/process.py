@@ -181,11 +181,16 @@ def load_data(sort):
         sk_data = load_wine()
     elif sort == "Breast Cancer Dataset":
         sk_data = load_breast_cancer()
-    else:
-        # 默认数据源
-        sk_data = load_iris()
 
-    df = pd.DataFrame(data=sk_data.data, columns=sk_data.feature_names)
+    target_data = sk_data.target.astype(str)
+    for i in range(len(sk_data.target_names)):
+        target_data = np.where(target_data == str(i), sk_data.target_names[i], target_data)
+
+    sk_feature_names = sk_data.feature_names
+    sk_data = np.concatenate((target_data.reshape(-1, 1), sk_data.data), axis=1)
+    sk_feature_names = np.insert(sk_feature_names, 0, "species")
+
+    df = pd.DataFrame(data=sk_data, columns=sk_feature_names)
 
     return df
 
@@ -280,7 +285,7 @@ def grid_search(params, model, x_train, y_train, scoring=None):
     else:
         grid_search_model = GridSearchCV(model, params, cv=5)
 
-    grid_search_model.fit(x_train, y_train)
+    grid_search_model.fit(x_train, y_train.ravel())
 
     info["Optimal hyperparameters"] = grid_search_model.best_params_
 

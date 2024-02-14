@@ -1,31 +1,20 @@
-import matplotlib.pyplot as plt
-from matplotlib.table import Table
+import gradio as gr
 
-# 数据
-data = [
-    ["Header 1", "Header 2", "Header 3"],
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]
-]
+def download_image():
+    # 在这里添加下载图片的逻辑，例如使用URL或其他方法获取图片
+    image_path = "path/to/your/image.jpg"  # 替换为实际的图片路径
+    return image_path
 
-# 创建子图
-fig, ax = plt.subplots()
+iface = gr.Interface(
+    fn=download_image,
+    live=True,
+    capture_session=True,
+    layout="horizontal",
+    components=[
+        gr.LinePlot,
+        gr.Button()
+    ],
+    theme="light",
+)
 
-# 隐藏坐标轴
-ax.axis('off')
-
-# 创建表格
-table = Table(ax, loc='center', cellText=data, colLabels=None, cellLoc='center')
-
-# 添加表格到子图
-ax.add_table(table)
-
-# 调整表格布局
-table.auto_set_font_size(False)
-table.set_fontsize(10)
-table.scale(1.2, 1.2)
-
-# 保存图片
-plt.savefig('table_image.png', bbox_inches='tight', pad_inches=0.05)
-plt.show()
+iface.launch()

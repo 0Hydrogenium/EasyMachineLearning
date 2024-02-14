@@ -17,10 +17,7 @@ def calculate_classification_metrics(pred_data, real_data, model_name):
     info["Accuracy of "+model_name] = np.sum(cur_confusion_matrix.diagonal()) / np.sum(cur_confusion_matrix)
     info["Precision of "+model_name] = cur_confusion_matrix.diagonal() / np.sum(cur_confusion_matrix, axis=1)
     info["Recall of "+model_name] = cur_confusion_matrix.diagonal() / np.sum(cur_confusion_matrix, axis=0)
-    # info["F1-score of "+model_name] = np.mean(2 * np.multiply(info["Precision of "+model_name], info["Recall of "+model_name]) / \
-    #                                   (info["Precision of "+model_name] + info["Recall of "+model_name]))
-
-    f1_score = np.mean(2 * np.multiply(info["Precision of "+model_name], info["Recall of "+model_name]) / \
+    info["F1-score of "+model_name] = np.mean(2 * np.multiply(info["Precision of "+model_name], info["Recall of "+model_name]) / \
                                       (info["Precision of "+model_name] + info["Recall of "+model_name]))
 
     max_class = max(real_data)[0]
@@ -34,5 +31,5 @@ def calculate_classification_metrics(pred_data, real_data, model_name):
 
     info["AUC of "+model_name] = roc_auc_score(real_data_, pred_data_)
 
-    return f1_score, fpr, tpr, thresholds
+    return info
 
