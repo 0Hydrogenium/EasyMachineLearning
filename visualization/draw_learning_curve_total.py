@@ -9,8 +9,7 @@ def draw_learning_curve_total(input_dict, type, paint_object: PaintObject):
     plt.figure(figsize=(10, 6), dpi=300)
 
     if type == "train":
-        i = 0
-        for label_name, values in input_dict.items():
+        for i, values in enumerate(input_dict.values()):
             train_sizes = values[0]
             train_scores_mean = values[1]
             train_scores_std = values[2]
@@ -22,25 +21,19 @@ def draw_learning_curve_total(input_dict, type, paint_object: PaintObject):
                 train_scores_mean - train_scores_std,
                 train_scores_mean + train_scores_std,
                 alpha=0.1,
-                color=paint_object.get_cur_list()[i]
+                color=paint_object.get_color_cur_list()[i]
             )
 
             plt.plot(
                 train_sizes,
                 train_scores_mean,
                 "o-",
-                color=paint_object.get_cur_list()[i],
-                label=label_name
+                color=paint_object.get_color_cur_list()[i],
+                label=paint_object.get_label_cur_list()[i]
             )
 
-            i += 1
-
-        title = "Training Learning curve"
-        # plt.title(title)
-
     else:
-        i = 0
-        for label_name, values in input_dict.items():
+        for i, values in enumerate(input_dict.values()):
             train_sizes = values[0]
             train_scores_mean = values[1]
             train_scores_std = values[2]
@@ -52,29 +45,27 @@ def draw_learning_curve_total(input_dict, type, paint_object: PaintObject):
                 test_scores_mean - test_scores_std,
                 test_scores_mean + test_scores_std,
                 alpha=0.1,
-                color=Config.COLORS[i]
+                color=paint_object.get_color_cur_list()[i]
             )
             plt.plot(
                 train_sizes,
                 test_scores_mean,
                 "o-",
-                color=Config.COLORS[i],
-                label=label_name
+                color=paint_object.get_color_cur_list()[i],
+                label=paint_object.get_label_cur_list()[i]
             )
 
-            i += 1
+    plt.title(paint_object.get_name())
 
-        title = "Cross-validation Learning curve"
-        # plt.title(title)
-
-    plt.xlabel("Train Sizes")
-    plt.ylabel("Accuracy")
+    plt.xlabel(paint_object.get_x_cur_label())
+    plt.ylabel(paint_object.get_y_cur_label())
     plt.legend()
 
     # plt.savefig("./diagram/{}.png".format(title), dpi=300)
     # plt.show()
 
-    paint_object.set_cur_num(len(input_dict.keys()))
+    paint_object.set_color_cur_num(len(input_dict.keys()))
+    paint_object.set_label_cur_num(len(input_dict.keys()))
 
     return plt, paint_object
 

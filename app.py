@@ -50,8 +50,7 @@ class Container:
             self.test_scores_std
         ]
 
-    def set_learning_curve_values(self, train_sizes, train_scores_mean, train_scores_std, test_scores_mean,
-                                  test_scores_std):
+    def set_learning_curve_values(self, train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std):
         self.train_sizes = train_sizes
         self.train_scores_mean = train_scores_mean
         self.train_scores_std = train_scores_std
@@ -72,13 +71,14 @@ class Container:
 
 
 class StaticValue:
-    max_color_num = 10
+    max_num = 10
 
 
 class FilePath:
     png_base = "./buffer/{}.png"
     excel_base = "./buffer/{}.xlsx"
 
+    # [绘图]
     display_dataset = "current_excel_data"
     learning_curve_train_plot = "learning_curve_train_plot"
     learning_curve_validation_plot = "learning_curve_validation_plot"
@@ -88,11 +88,15 @@ class FilePath:
 class MN:  # ModelName
     classification = "classification"
     regression = "regression"
+
     linear_regression = "linear_regression"
     polynomial_regression = "polynomial_regression"
     logistic_regression = "logistic_regression"
 
+    # [绘图]
     learning_curve_train = "learning_curve_train"
+    learning_curve_validation = "learning_curve_validation"
+    shap_beeswarm = "shap_beeswarm"
 
 
 class LN:  # LabelName
@@ -118,21 +122,54 @@ class LN:  # LabelName
     linear_regression_model_radio = "选择线性回归的模型"
     model_optimize_radio = "选择超参数优化方法"
     model_train_button = "训练"
+    select_as_model_radio = "选择所需训练的模型"
+
+    title_name_textbox = "标题"
+    x_label_textbox = "x 轴名称"
+    y_label_textbox = "y 轴名称"
+    colors = ["颜色 {}".format(i) for i in range(StaticValue.max_num)]
+    labels = ["图例 {}".format(i) for i in range(StaticValue.max_num)]
+
+    # [绘图]
     learning_curve_checkboxgroup = "选择所需绘制学习曲线的模型"
     learning_curve_train_button = "绘制训练集学习曲线"
     learning_curve_validation_button = "绘制验证集学习曲线"
-    learning_curve_train_plot = "绘制训练集学习曲线"
-    learning_curve_validation_plot = "绘制验证集学习曲线"
     shap_beeswarm_radio = "选择所需绘制蜂群特征图的模型"
     shap_beeswarm_button = "绘制蜂群特征图"
-    shap_beeswarm_plot = "蜂群特征图"
-    select_as_model_radio = "选择所需训练的模型"
 
-    colors = ["颜色 {}".format(i) for i in range(StaticValue.max_color_num)]
+    learning_curve_train_plot = "训练集学习曲线"
+    learning_curve_validation_plot = "验证集学习曲线"
+    shap_beeswarm_plot = "蜂群特征图"
+
+
+def get_return_extra(is_visible, extra_gr_dict: dict = None):
+    if is_visible:
+        gr_dict = {
+            draw_file: gr.File(Dataset.after_get_file(), visible=Dataset.check_file()),
+        }
+
+        if extra_gr_dict:
+            gr_dict.update(extra_gr_dict)
+
+        return gr_dict
+
+    gr_dict = {
+        draw_plot: gr.Plot(visible=False),
+        draw_file: gr.File(visible=False),
+    }
+
+    gr_dict.update(dict(zip(colorpickers, [gr.ColorPicker(visible=False)] * StaticValue.max_num)))
+    gr_dict.update(dict(zip(color_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_num)))
+    gr_dict.update(dict(zip(legend_labels_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_num)))
+    gr_dict.update({title_name_textbox: gr.Textbox(visible=False)})
+    gr_dict.update({x_label_textbox: gr.Textbox(visible=False)})
+    gr_dict.update({y_label_textbox: gr.Textbox(visible=False)})
+
+    return gr_dict
 
 
 def get_outputs():
-    gr_dict = {
+    gr_set = {
         choose_custom_dataset_file,
         display_dataset_dataframe,
         display_total_col_num_text,
@@ -157,31 +194,28 @@ def get_outputs():
         model_optimize_radio,
         model_train_button,
         model_train_checkbox,
-        learning_curve_checkboxgroup,
-        learning_curve_train_button,
-        learning_curve_validation_button,
-        learning_curve_train_plot,
-        learning_curve_train_plot_file,
-
-        learning_curve_validation_plot,
-        learning_curve_validation_plot_file,
-        shap_beeswarm_radio,
-        shap_beeswarm_button,
-        shap_beeswarm_plot,
-        shap_beeswarm_plot_file,
         select_as_model_radio,
         choose_assign_radio,
         display_dataset,
+        draw_plot,
+        draw_file,
+        title_name_textbox,
+        x_label_textbox,
+        y_label_textbox,
 
-        learning_curve_train_plot,
-        learning_curve_validation_plot,
-        shap_beeswarm_plot,
+        # [绘图]
+        learning_curve_checkboxgroup,
+        learning_curve_train_button,
+        learning_curve_validation_button,
+        shap_beeswarm_radio,
+        shap_beeswarm_button,
     }
 
-    gr_dict.update(set(learning_curve_train_colorpickers))
-    gr_dict.update(set(learning_curve_train_color_textboxs))
+    gr_set.update(set(colorpickers))
+    gr_set.update(set(color_textboxs))
+    gr_set.update(set(legend_labels_textboxs))
 
-    return gr_dict
+    return gr_set
 
 
 def get_return(is_visible, extra_gr_dict: dict = None):
@@ -216,23 +250,24 @@ def get_return(is_visible, extra_gr_dict: dict = None):
 
             model_train_button: gr.Button(LN.model_train_button, visible=Dataset.check_before_train()),
             model_train_checkbox: gr.Checkbox(Dataset.get_model_container_status(), visible=Dataset.check_select_model(), label=Dataset.get_model_label()),
+
+            draw_plot: gr.Plot(visible=False),
+            draw_file: gr.File(visible=False),
+            title_name_textbox: gr.Textbox(visible=False),
+            x_label_textbox: gr.Textbox(visible=False),
+            y_label_textbox: gr.Textbox(visible=False),
+
+            # [绘图]
             learning_curve_checkboxgroup: gr.Checkboxgroup(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.learning_curve_checkboxgroup),
             learning_curve_train_button: gr.Button(LN.learning_curve_train_button, visible=Dataset.check_before_train()),
-            learning_curve_train_plot_file: gr.File(Dataset.after_get_learning_curve_train_plot_file(), visible=Dataset.check_learning_curve_train_plot_file()),
-
             learning_curve_validation_button: gr.Button(LN.learning_curve_validation_button, visible=Dataset.check_before_train()),
-            learning_curve_validation_plot_file: gr.File(Dataset.after_learning_curve_validation_plot_file(), visible=Dataset.check_learning_curve_validation_plot_file()),
             shap_beeswarm_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.shap_beeswarm_radio),
             shap_beeswarm_button: gr.Button(LN.shap_beeswarm_button, visible=Dataset.check_before_train()),
-            shap_beeswarm_plot_file: gr.File(Dataset.after_get_shap_beeswarm_plot_file(), visible=Dataset.check_shap_beeswarm_plot_file()),
-
-            learning_curve_train_plot: gr.Plot(visible=False),
-            learning_curve_validation_plot: gr.Plot(visible=False),
-            shap_beeswarm_plot: gr.Plot(visible=False),
         }
 
-        gr_dict.update(dict(zip(learning_curve_train_colorpickers, [gr.ColorPicker(visible=False)] * StaticValue.max_color_num)))
-        gr_dict.update(dict(zip(learning_curve_train_color_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_color_num)))
+        gr_dict.update(dict(zip(colorpickers, [gr.ColorPicker(visible=False)] * StaticValue.max_num)))
+        gr_dict.update(dict(zip(color_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_num)))
+        gr_dict.update(dict(zip(legend_labels_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_num)))
 
         if extra_gr_dict:
             gr_dict.update(extra_gr_dict)
@@ -264,24 +299,26 @@ def get_return(is_visible, extra_gr_dict: dict = None):
         model_optimize_radio: gr.Radio(visible=False),
         model_train_button: gr.Button(visible=False),
         model_train_checkbox: gr.Checkbox(visible=False),
-        learning_curve_checkboxgroup: gr.Checkboxgroup(visible=False),
-        learning_curve_train_button: gr.Button(visible=False),
-
-        learning_curve_validation_button: gr.Button(visible=False),
-        learning_curve_train_plot: gr.Plot(visible=False),
-        learning_curve_train_plot_file: gr.File(visible=False),
-        learning_curve_validation_plot: gr.Plot(visible=False),
-        learning_curve_validation_plot_file: gr.File(visible=False),
-        shap_beeswarm_radio: gr.Radio(visible=False),
-        shap_beeswarm_button: gr.Button(visible=False),
-        shap_beeswarm_plot: gr.Plot(visible=False),
-        shap_beeswarm_plot_file: gr.File(visible=False),
         select_as_model_radio: gr.Radio(visible=False),
         choose_assign_radio: gr.Radio(visible=False),
+
+        draw_plot: gr.Plot(visible=False),
+        draw_file: gr.File(visible=False),
+        title_name_textbox: gr.Textbox(visible=False),
+        x_label_textbox: gr.Textbox(visible=False),
+        y_label_textbox: gr.Textbox(visible=False),
+
+        # [绘图]
+        learning_curve_checkboxgroup: gr.Checkboxgroup(visible=False),
+        learning_curve_train_button: gr.Button(visible=False),
+        learning_curve_validation_button: gr.Button(visible=False),
+        shap_beeswarm_radio: gr.Radio(visible=False),
+        shap_beeswarm_button: gr.Button(visible=False),
     }
 
-    gr_dict.update(dict(zip(learning_curve_train_colorpickers, [gr.ColorPicker(visible=False)] * StaticValue.max_color_num)))
-    gr_dict.update(dict(zip(learning_curve_train_color_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_color_num)))
+    gr_dict.update(dict(zip(colorpickers, [gr.ColorPicker(visible=False)] * StaticValue.max_num)))
+    gr_dict.update(dict(zip(color_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_num)))
+    gr_dict.update(dict(zip(legend_labels_textboxs, [gr.Textbox(visible=False)] * StaticValue.max_num)))
 
     return gr_dict
 
@@ -304,6 +341,8 @@ class Dataset:
         MN.polynomial_regression: Container(),
         MN.logistic_regression: Container(),
     }
+
+    visualize = ""
 
     @classmethod
     def get_dataset_list(cls):
@@ -558,8 +597,7 @@ class Dataset:
         container = Container(x_train, y_train, x_test, y_test, optimize)
 
         if cls.cur_model == MN.linear_regression:
-            container = linear_regression(container,
-                                          cls.get_linear_regression_model_name_mapping()[linear_regression_model_type])
+            container = linear_regression(container, cls.get_linear_regression_model_name_mapping()[linear_regression_model_type])
         elif cls.cur_model == MN.polynomial_regression:
             container = polynomial_regression(container)
         elif cls.cur_model == MN.logistic_regression:
@@ -606,76 +644,98 @@ class Dataset:
         return trained_model_list
 
     @classmethod
-    def draw_learning_curve_train_plot(cls, model_list: list, color_list: list, is_default: bool):
+    def draw_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
+        # [绘图]
+        if cls.visualize == MN.learning_curve_train:
+            return cls.draw_learning_curve_train_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+        elif cls.visualize == MN.learning_curve_validation:
+            return cls.draw_learning_curve_validation_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+        elif cls.visualize == MN.shap_beeswarm:
+            return cls.draw_shap_beeswarm_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+
+    @classmethod
+    def draw_learning_curve_train_plot(cls, model_list, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
         learning_curve_dict = {}
 
         for model_name in model_list:
             model_name = cls.get_model_name_mapping_reverse()[model_name]
             learning_curve_dict[model_name] = cls.container_dict[model_name].get_learning_curve_values()
 
-        cur_list = Config.COLORS if is_default else color_list
+        color_cur_list = Config.COLORS if is_default else color_list
+        label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
+        x_cur_label = "Train Sizes" if is_default else x_label
+        y_cur_label = "Accuracy" if is_default else y_label
+        cur_name = "" if is_default else name
 
         paint_object = PaintObject()
-        paint_object.set_cur_list(cur_list)
+        paint_object.set_color_cur_list(color_cur_list)
+        paint_object.set_label_cur_list(label_cur_list)
+        paint_object.set_x_cur_label(x_cur_label)
+        paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
 
         return draw_learning_curve_total(learning_curve_dict, "train", paint_object)
 
     @classmethod
-    def draw_learning_curve_validation_plot(cls, model_list: list) -> plt.Figure:
+    def draw_learning_curve_validation_plot(cls, model_list, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
         learning_curve_dict = {}
 
         for model_name in model_list:
             model_name = cls.get_model_name_mapping_reverse()[model_name]
             learning_curve_dict[model_name] = cls.container_dict[model_name].get_learning_curve_values()
 
-        return draw_learning_curve_total(learning_curve_dict, "validation")
+        color_cur_list = Config.COLORS if is_default else color_list
+        label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
+        x_cur_label = "Train Sizes" if is_default else x_label
+        y_cur_label = "Accuracy" if is_default else y_label
+        cur_name = "" if is_default else name
+
+        paint_object = PaintObject()
+        paint_object.set_color_cur_list(color_cur_list)
+        paint_object.set_label_cur_list(label_cur_list)
+        paint_object.set_x_cur_label(x_cur_label)
+        paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
+
+        return draw_learning_curve_total(learning_curve_dict, "validation", paint_object)
 
     @classmethod
-    def draw_shap_beeswarm_plot(cls, model_name) -> plt.Figure:
+    def draw_shap_beeswarm_plot(cls, model_name, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
         model_name = cls.get_model_name_mapping_reverse()[model_name]
         container = cls.container_dict[model_name]
 
-        return shap_calculate(container.get_model(), container.x_train, cls.data.columns.values)
+        # color_cur_list = Config.COLORS if is_default else color_list
+        # label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
+        # x_cur_label = "Train Sizes" if is_default else x_label
+        # y_cur_label = "Accuracy" if is_default else y_label
+        cur_name = "" if is_default else name
+
+        paint_object = PaintObject()
+        # paint_object.set_color_cur_list(color_cur_list)
+        # paint_object.set_label_cur_list(label_cur_list)
+        # paint_object.set_x_cur_label(x_cur_label)
+        # paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
+
+        return shap_calculate(container.get_model(), container.x_train, cls.data.columns.values, paint_object)
 
     @classmethod
-    def get_learning_curve_train_plot_file(cls):
-        return FilePath.png_base.format(FilePath.learning_curve_train_plot)
+    def get_file(cls):
+        # [绘图]
+        if cls.visualize == MN.learning_curve_train:
+            return FilePath.png_base.format(FilePath.learning_curve_train_plot)
+        elif cls.visualize == MN.learning_curve_validation:
+            return FilePath.png_base.format(FilePath.learning_curve_validation_plot)
+        elif cls.visualize == MN.shap_beeswarm:
+            return FilePath.png_base.format(FilePath.shap_beeswarm_plot)
 
     @classmethod
-    def check_learning_curve_train_plot_file(cls):
-        return os.path.exists(cls.get_learning_curve_train_plot_file())
+    def check_file(cls):
+        return os.path.exists(cls.get_file())
 
     @classmethod
-    def after_get_learning_curve_train_plot_file(cls):
-        pass
-        return cls.get_learning_curve_train_plot_file() if cls.check_learning_curve_train_plot_file() else None
-
-
-    @classmethod
-    def get_learning_curve_validation_plot_file(cls):
-        return FilePath.png_base.format(FilePath.learning_curve_validation_plot)
-
-    @classmethod
-    def check_learning_curve_validation_plot_file(cls):
-        return os.path.exists(cls.get_learning_curve_validation_plot_file())
-
-    @classmethod
-    def after_learning_curve_validation_plot_file(cls):
-        return cls.get_learning_curve_validation_plot_file() if cls.check_learning_curve_validation_plot_file() else None
-
-
-    @classmethod
-    def get_shap_beeswarm_plot_file(cls):
-        return FilePath.png_base.format(FilePath.shap_beeswarm_plot)
-
-    @classmethod
-    def check_shap_beeswarm_plot_file(cls):
-        return os.path.exists(cls.get_shap_beeswarm_plot_file())
-
-    @classmethod
-    def after_get_shap_beeswarm_plot_file(cls):
-        return cls.get_shap_beeswarm_plot_file() if cls.check_shap_beeswarm_plot_file() else None
-
+    def after_get_file(cls):
+        return cls.get_file() if cls.check_file() else None
 
     @classmethod
     def get_model_list(cls):
@@ -720,21 +780,28 @@ class Dataset:
         cls.change_data_type_to_float()
 
     @classmethod
-    def learning_curve_train_colorpickers_change(cls, paint_object):
-        cur_num = paint_object.get_cur_num()
+    def colorpickers_change(cls, paint_object):
+        cur_num = paint_object.get_color_cur_num()
 
-        true_list = [gr.ColorPicker(paint_object.get_cur_list()[i], visible=True, label=LN.colors[i]) for i in
-                     range(cur_num)]
+        true_list = [gr.ColorPicker(paint_object.get_color_cur_list()[i], visible=True, label=LN.colors[i]) for i in range(cur_num)]
 
-        return true_list + [gr.ColorPicker(visible=False)] * (StaticValue.max_color_num - cur_num)
+        return true_list + [gr.ColorPicker(visible=False)] * (StaticValue.max_num - cur_num)
 
     @classmethod
-    def learning_curve_train_color_textboxs_change(cls, paint_object):
-        cur_num = paint_object.get_cur_num()
+    def color_textboxs_change(cls, paint_object):
+        cur_num = paint_object.get_color_cur_num()
 
-        true_list = [gr.Textbox(paint_object.get_cur_list()[i], visible=True, label="") for i in range(cur_num)]
+        true_list = [gr.Textbox(paint_object.get_color_cur_list()[i], visible=True, show_label=False) for i in range(cur_num)]
 
-        return true_list + [gr.Textbox(visible=False)] * (StaticValue.max_color_num - cur_num)
+        return true_list + [gr.Textbox(visible=False)] * (StaticValue.max_num - cur_num)
+
+    @classmethod
+    def labels_change(cls, paint_object):
+        cur_num = paint_object.get_label_cur_num()
+
+        true_list = [gr.Textbox(paint_object.get_label_cur_list()[i], visible=True, label=LN.labels[i]) for i in range(cur_num)]
+
+        return true_list + [gr.Textbox(visible=False)] * (StaticValue.max_num - cur_num)
 
 
 def choose_assign(assign: str):
@@ -749,42 +816,85 @@ def select_as_model(model_name: str):
     return get_return(True)
 
 
-def draw_shap_beeswarm_plot(model_name):
-    cur_plt = Dataset.draw_shap_beeswarm_plot(model_name)
-
-    cur_plt.savefig(FilePath.png_base.format(FilePath.shap_beeswarm_plot), dpi=300)
-
-    return get_return(True, {shap_beeswarm_plot: gr.Plot(cur_plt, visible=True, label=LN.shap_beeswarm_plot)})
+# [绘图]
+def shap_beeswarm_first_draw_plot(*inputs):
+    Dataset.visualize = MN.shap_beeswarm
+    return first_draw_plot(inputs)
 
 
-def draw_learning_curve_validation_plot(model_list: list):
-    cur_plt = Dataset.draw_learning_curve_validation_plot(model_list)
-
-    cur_plt.savefig(FilePath.png_base.format(FilePath.learning_curve_validation_plot), dpi=300)
-
-    return get_return(True, {learning_curve_validation_plot: gr.Plot(cur_plt, visible=True, label=LN.learning_curve_validation_plot)})
+def learning_curve_validation_first_draw_plot(*inputs):
+    Dataset.visualize = MN.learning_curve_validation
+    return first_draw_plot(inputs)
 
 
-def first_draw_learning_curve_train_plot(*inputs):
-    model_list = inputs[0]
+def learning_curve_train_first_draw_plot(*inputs):
+    Dataset.visualize = MN.learning_curve_train
+    return first_draw_plot(inputs)
+
+
+def first_draw_plot(inputs):
+    select_model = inputs[0]
+    x_label = ""
+    y_label = ""
+    name = ""
     color_list = []
+    label_list = []
 
-    cur_plt, paint_object = Dataset.draw_learning_curve_train_plot(model_list, color_list, True)
+    cur_plt, paint_object = Dataset.draw_plot(select_model, color_list, label_list, name, x_label, y_label, True)
 
-    cur_plt.savefig(FilePath.png_base.format(FilePath.learning_curve_train_plot), dpi=300)
-
-    return [gr.Plot(cur_plt, visible=True, label=LN.learning_curve_train_plot)] + Dataset.learning_curve_train_colorpickers_change(paint_object) + Dataset.learning_curve_train_color_textboxs_change(paint_object) + [gr.File(Dataset.after_get_learning_curve_train_plot_file(), visible=Dataset.check_learning_curve_train_plot_file())]
+    return first_draw_plot_with_non_first_draw_plot(cur_plt, paint_object)
 
 
-def non_first_draw_learning_curve_train_plot(*inputs):
-    model_list = inputs[0]
-    color_list = list(inputs[1:])
+def out_non_first_draw_plot(*inputs):
+    return non_first_draw_plot(inputs)
 
-    cur_plt, paint_object = Dataset.draw_learning_curve_train_plot(model_list, color_list, False)
 
-    return [gr.Plot(cur_plt, visible=True,
-                    label=LN.learning_curve_train_plot)] + Dataset.learning_curve_train_colorpickers_change(
-        paint_object) + Dataset.learning_curve_train_color_textboxs_change(paint_object)
+def non_first_draw_plot(inputs):
+    name = inputs[0]
+    x_label = inputs[1]
+    y_label = inputs[2]
+    color_list = list(inputs[3: StaticValue.max_num+3])
+    label_list = list(inputs[StaticValue.max_num+3: 2*StaticValue.max_num+3])
+    start_index = 2*StaticValue.max_num+3
+
+    # 绘图
+    if Dataset.visualize == MN.learning_curve_train:
+        select_model = inputs[start_index]
+    elif Dataset.visualize == MN.learning_curve_validation:
+        select_model = inputs[start_index]
+    elif Dataset.visualize == MN.shap_beeswarm:
+        select_model = inputs[start_index+1]
+
+    else:
+        select_model = inputs[start_index: start_index+1]
+
+    cur_plt, paint_object = Dataset.draw_plot(select_model, color_list, label_list, name, x_label, y_label, False)
+
+    return first_draw_plot_with_non_first_draw_plot(cur_plt, paint_object)
+
+
+def first_draw_plot_with_non_first_draw_plot(cur_plt, paint_object):
+    extra_gr_dict = {}
+
+    # [绘图]
+    if Dataset.visualize == MN.learning_curve_train:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.learning_curve_train_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.learning_curve_train_plot)})
+    elif Dataset.visualize == MN.learning_curve_validation:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.learning_curve_validation_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.learning_curve_validation_plot)})
+    elif Dataset.visualize == MN.shap_beeswarm:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.shap_beeswarm_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.shap_beeswarm_plot)})
+
+    extra_gr_dict.update(dict(zip(colorpickers, Dataset.colorpickers_change(paint_object))))
+    extra_gr_dict.update(dict(zip(color_textboxs, Dataset.color_textboxs_change(paint_object))))
+    extra_gr_dict.update(dict(zip(legend_labels_textboxs, Dataset.labels_change(paint_object))))
+    extra_gr_dict.update({title_name_textbox: gr.Textbox(paint_object.get_name(), visible=True, label=LN.title_name_textbox)})
+    extra_gr_dict.update({x_label_textbox: gr.Textbox(paint_object.get_x_cur_label(), visible=True, label=LN.x_label_textbox)})
+    extra_gr_dict.update({y_label_textbox: gr.Textbox(paint_object.get_y_cur_label(), visible=True, label=LN.y_label_textbox)})
+
+    return get_return_extra(True, extra_gr_dict)
 
 
 def train_model(optimize, linear_regression_model_type):
@@ -935,29 +1045,37 @@ with gr.Blocks() as demo:
                     learning_curve_train_button = gr.Button(visible=False)
                     learning_curve_validation_button = gr.Button(visible=False)
 
-                learning_curve_train_colorpickers = []
-                learning_curve_train_color_textboxs = []
-                with gr.Accordion("颜色", open=False):
-                    with gr.Row():
-                        for i in range(StaticValue.max_color_num):
-                            with gr.Row():
-                                with gr.Group():
-                                    colorpicker = gr.ColorPicker(visible=False)
-                                    learning_curve_train_colorpickers.append(colorpicker)
-                                    color_textbox = gr.Textbox(visible=False)
-                                    learning_curve_train_color_textboxs.append(color_textbox)
-
-                learning_curve_train_plot = gr.Plot(visible=False)
-                learning_curve_train_plot_file = gr.File(visible=False)
-                learning_curve_validation_plot = gr.Plot(visible=False)
-                learning_curve_validation_plot_file = gr.File(visible=False)
-
             with gr.Tab("蜂群特征图"):
                 shap_beeswarm_radio = gr.Radio(visible=False)
                 shap_beeswarm_button = gr.Button(visible=False)
-                with gr.Group():
-                    shap_beeswarm_plot = gr.Plot(visible=False)
-                    shap_beeswarm_plot_file = gr.File(visible=False)
+
+            legend_labels_textboxs = []
+            with gr.Accordion("图例"):
+                with gr.Row():
+                    for i in range(StaticValue.max_num):
+                        with gr.Row():
+                            label = gr.Textbox(visible=False)
+                            legend_labels_textboxs.append(label)
+
+            with gr.Accordion("坐标轴"):
+                with gr.Row():
+                    title_name_textbox = gr.Textbox(visible=False)
+                    x_label_textbox = gr.Textbox(visible=False)
+                    y_label_textbox = gr.Textbox(visible=False)
+
+            colorpickers = []
+            color_textboxs = []
+            with gr.Accordion("颜色"):
+                with gr.Row():
+                    for i in range(StaticValue.max_num):
+                        with gr.Row():
+                            colorpicker = gr.ColorPicker(visible=False)
+                            colorpickers.append(colorpicker)
+                            color_textbox = gr.Textbox(visible=False)
+                            color_textboxs.append(color_textbox)
+
+            draw_plot = gr.Plot(visible=False)
+            draw_file = gr.File(visible=False)
 
     '''
         监听事件
@@ -965,8 +1083,7 @@ with gr.Blocks() as demo:
 
     # 选择数据源
     choose_dataset_radio.change(fn=choose_dataset, inputs=[choose_dataset_radio], outputs=get_outputs())
-    choose_custom_dataset_file.upload(fn=choose_custom_dataset, inputs=[choose_custom_dataset_file],
-                                      outputs=get_outputs())
+    choose_custom_dataset_file.upload(fn=choose_custom_dataset, inputs=[choose_custom_dataset_file], outputs=get_outputs())
 
     # 操作数据表
 
@@ -994,12 +1111,23 @@ with gr.Blocks() as demo:
     model_train_button.click(fn=train_model, inputs=[model_optimize_radio, linear_regression_model_radio], outputs=get_outputs())
 
     # 可视化
-    learning_curve_train_button.click(fn=first_draw_learning_curve_train_plot, inputs=[learning_curve_checkboxgroup], outputs=[learning_curve_train_plot] + learning_curve_train_colorpickers + learning_curve_train_color_textboxs + learning_curve_train_plot_file)
-    learning_curve_validation_button.click(fn=draw_learning_curve_validation_plot, inputs=[learning_curve_checkboxgroup], outputs=get_outputs())
-    shap_beeswarm_button.click(fn=draw_shap_beeswarm_plot, inputs=[shap_beeswarm_radio], outputs=get_outputs())
-    for i in range(StaticValue.max_color_num):
-        learning_curve_train_colorpickers[i].change(fn=non_first_draw_learning_curve_train_plot, inputs=[learning_curve_checkboxgroup] + learning_curve_train_colorpickers, outputs=[learning_curve_train_plot] + learning_curve_train_colorpickers + learning_curve_train_color_textboxs)
-        learning_curve_train_color_textboxs[i].submit(fn=non_first_draw_learning_curve_train_plot, inputs=[learning_curve_checkboxgroup] + learning_curve_train_color_textboxs, outputs=[learning_curve_train_plot] + learning_curve_train_colorpickers + learning_curve_train_color_textboxs)
+    learning_curve_train_button.click(fn=learning_curve_train_first_draw_plot, inputs=[learning_curve_checkboxgroup], outputs=get_outputs())
+    learning_curve_validation_button.click(fn=learning_curve_validation_first_draw_plot, inputs=[learning_curve_checkboxgroup], outputs=get_outputs())
+    shap_beeswarm_button.click(fn=shap_beeswarm_first_draw_plot, inputs=[shap_beeswarm_radio], outputs=get_outputs())
+
+    title_name_textbox.blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
+                            + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+    x_label_textbox.blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
+                         + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+    y_label_textbox.blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
+                         + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+    for i in range(StaticValue.max_num):
+        colorpickers[i].blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
+                             + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+        color_textboxs[i].blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + color_textboxs + legend_labels_textboxs
+                               + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+        legend_labels_textboxs[i].blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
+                                       + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
 
 if __name__ == "__main__":
     demo.launch()
