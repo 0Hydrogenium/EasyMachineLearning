@@ -11,3 +11,5 @@ xgboost~=2.0.3
 tqdm~=4.64.1
 shap~=0.44.1
 scikit-optimize~=0.9.0
+lightgbm~=4.3.0
+torch~=2.2.0+cu118

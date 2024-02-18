@@ -7,71 +7,44 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
-from analysis.shap_model import shap_calculate
+from analysis.shap_model import draw_shap_beeswarm, draw_waterfall, draw_force, draw_dependence
+from metrics.calculate_classification_metrics import ClassificationMetrics
+from metrics.calculate_regression_metrics import RegressionMetrics
 from static.process import *
 from analysis.linear_model import *
+from visualization.draw_data_fit_total import draw_data_fit_total
 from visualization.draw_learning_curve_total import draw_learning_curve_total
-from static.paint import *
+from static.new_class import *
 
 import warnings
 
 warnings.filterwarnings("ignore")
 
 
-class Container:
-    def __init__(self, x_train=None, y_train=None, x_test=None, y_test=None, hyper_params_optimize=None):
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_test = x_test
-        self.y_test = y_test
-        self.hyper_params_optimize = hyper_params_optimize
-        self.info = dict()
-        self.y_pred = None
-        self.train_sizes = None
-        self.train_scores_mean = None
-        self.train_scores_std = None
-        self.test_scores_mean = None
-        self.test_scores_std = None
-        self.status = None
-        self.model = None
+class ChooseModelMetrics:
+    @classmethod
+    def choose(cls, cur_model):
+        if cur_model == MN.linear_regression:
+            return RegressionMetrics.get_metrics()
+        elif cur_model == MN.polynomial_regression:
+            return RegressionMetrics.get_metrics()
+        elif cur_model == MN.logistic_regression:
+            return ClassificationMetrics.get_metrics()
 
-    def set_info(self, info: dict):
-        self.info = info
 
-    def set_y_pred(self, y_pred):
-        self.y_pred = y_pred
-
-    def get_learning_curve_values(self):
-        return [
-            self.train_sizes,
-            self.train_scores_mean,
-            self.train_scores_std,
-            self.test_scores_mean,
-            self.test_scores_std
-        ]
-
-    def set_learning_curve_values(self, train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std):
-        self.train_sizes = train_sizes
-        self.train_scores_mean = train_scores_mean
-        self.train_scores_std = train_scores_std
-        self.test_scores_mean = test_scores_mean
-        self.test_scores_std = test_scores_std
-
-    def get_status(self):
-        return self.status
-
-    def set_status(self, status: str):
-        self.status = status
-
-    def get_model(self):
-        return self.model
-
-    def set_model(self, model):
-        self.model = model
+class ChooseModelParams:
+    @classmethod
+    def choose(cls, cur_model):
+        if cur_model == MN.linear_regression:
+            return LinearRegressionParams.get_params("Lasso")
+        elif cur_model == MN.polynomial_regression:
+            return PolynomialRegressionParams.get_params()
+        elif cur_model == MN.logistic_regression:
+            return LogisticRegressionParams.get_params()
 
 
 class StaticValue:
-    max_num = 10
+    max_num = 12
 
 
 class FilePath:
@@ -80,23 +53,30 @@ class FilePath:
 
     # [绘图]
     display_dataset = "current_excel_data"
-    learning_curve_train_plot = "learning_curve_train_plot"
-    learning_curve_validation_plot = "learning_curve_validation_plot"
+    learning_curve_plot = "learning_curve_plot"
     shap_beeswarm_plot = "shap_beeswarm_plot"
+    data_fit_plot = "data_fit_plot"
+    waterfall_plot = "waterfall_plot"
+    force_plot = "force_plot"
+    dependence_plot = "dependence_plot"
 
 
 class MN:  # ModelName
     classification = "classification"
     regression = "regression"
 
-    linear_regression = "linear_regression"
-    polynomial_regression = "polynomial_regression"
-    logistic_regression = "logistic_regression"
+    # [模型]
+    linear_regression = "linear regression"
+    polynomial_regression = "polynomial regression"
+    logistic_regression = "logistic regression"
 
     # [绘图]
-    learning_curve_train = "learning_curve_train"
-    learning_curve_validation = "learning_curve_validation"
+    learning_curve = "learning_curve"
     shap_beeswarm = "shap_beeswarm"
+    data_fit = "data_fit"
+    waterfall = "waterfall"
+    force = "force"
+    dependence = "dependence"
 
 
 class LN:  # LabelName
@@ -119,10 +99,14 @@ class LN:  # LabelName
     standardize_data_button = "标准化 [可选]"
     select_as_y_radio = "选择因变量 [必选]"
     choose_assign_radio = "选择任务类型（同时会根据任务类型将第1列数据强制转换）[必选]"
-    linear_regression_model_radio = "选择线性回归的模型"
     model_optimize_radio = "选择超参数优化方法"
     model_train_button = "训练"
+    model_train_params_dataframe = "训练后的模型参数"
+    model_train_metrics_dataframe = "训练后的模型指标"
     select_as_model_radio = "选择所需训练的模型"
+
+    # [模型]
+    linear_regression_model_radio = "选择线性回归的模型"
 
     title_name_textbox = "标题"
     x_label_textbox = "x 轴名称"
@@ -131,15 +115,30 @@ class LN:  # LabelName
     labels = ["图例 {}".format(i) for i in range(StaticValue.max_num)]
 
     # [绘图]
-    learning_curve_checkboxgroup = "选择所需绘制学习曲线的模型"
-    learning_curve_train_button = "绘制训练集学习曲线"
-    learning_curve_validation_button = "绘制验证集学习曲线"
-    shap_beeswarm_radio = "选择所需绘制蜂群特征图的模型"
-    shap_beeswarm_button = "绘制蜂群特征图"
+    learning_curve_checkboxgroup = "选择所需绘制学习曲线图的模型"
+    learning_curve_button = "绘制学习曲线图"
+    shap_beeswarm_radio = "选择所需绘制特征蜂群图的模型"
+    shap_beeswarm_type = "图像类型"
+    shap_beeswarm_button = "绘制特征蜂群图"
+    data_fit_checkboxgroup = "选择所需绘制数据拟合图的模型"
+    data_fit_button = "绘制数据拟合图"
+    waterfall_radio = "选择所需绘制特征瀑布图的模型"
+    waterfall_number = "相关特征的变量索引"
+    waterfall_button = "绘制特征瀑布图"
+    force_radio = "选择所需绘制特征力图的模型"
+    force_number_1 = "相关特征的变量头索引"
+    force_number_2 = "相关特征的变量尾索引"
+    force_button = "绘制特征力图"
+    dependence_radio = "选择所需绘制特征依赖图的模型"
+    dependence_col = "所选列"
+    dependence_button = "绘制特征依赖图"
 
-    learning_curve_train_plot = "训练集学习曲线"
-    learning_curve_validation_plot = "验证集学习曲线"
-    shap_beeswarm_plot = "蜂群特征图"
+    learning_curve_plot = "学习曲线图"
+    shap_beeswarm_plot = "特征蜂群图"
+    data_fit_plot = "数据拟合图"
+    waterfall_plot = "特征瀑布图"
+    force_plot = "特征力图"
+    dependence_plot = "特征依赖图"
 
 
 def get_return_extra(is_visible, extra_gr_dict: dict = None):
@@ -190,10 +189,11 @@ def get_outputs():
         standardize_data_checkboxgroup,
         standardize_data_button,
         select_as_y_radio,
-        linear_regression_model_radio,
         model_optimize_radio,
         model_train_button,
         model_train_checkbox,
+        model_train_params_dataframe,
+        model_train_metrics_dataframe,
         select_as_model_radio,
         choose_assign_radio,
         display_dataset,
@@ -203,12 +203,27 @@ def get_outputs():
         x_label_textbox,
         y_label_textbox,
 
+        # [模型]
+        linear_regression_model_radio,
+
         # [绘图]
         learning_curve_checkboxgroup,
-        learning_curve_train_button,
-        learning_curve_validation_button,
+        learning_curve_button,
         shap_beeswarm_radio,
+        shap_beeswarm_type,
         shap_beeswarm_button,
+        data_fit_checkboxgroup,
+        data_fit_button,
+        waterfall_radio,
+        waterfall_number,
+        waterfall_button,
+        force_radio,
+        force_number_1,
+        force_number_2,
+        force_button,
+        dependence_radio,
+        dependence_col,
+        dependence_button,
     }
 
     gr_set.update(set(colorpickers))
@@ -245,11 +260,10 @@ def get_return(is_visible, extra_gr_dict: dict = None):
 
             select_as_model_radio: gr.Radio(Dataset.get_model_list(), visible=Dataset.check_before_train(), label=LN.select_as_model_radio),
             model_optimize_radio: gr.Radio(Dataset.get_optimize_list(), visible=Dataset.check_before_train(), label=LN.model_optimize_radio),
-
-            linear_regression_model_radio: gr.Radio(Dataset.get_linear_regression_model_list(), visible=Dataset.get_linear_regression_mark(), label=LN.linear_regression_model_radio),
-
             model_train_button: gr.Button(LN.model_train_button, visible=Dataset.check_before_train()),
             model_train_checkbox: gr.Checkbox(Dataset.get_model_container_status(), visible=Dataset.check_select_model(), label=Dataset.get_model_label()),
+            model_train_params_dataframe: gr.Dataframe(Dataset.get_model_train_params_dataframe(), visible=Dataset.get_model_container_status()),
+            model_train_metrics_dataframe: gr.Dataframe(Dataset.get_model_train_metrics_dataframe(), visible=Dataset.get_model_container_status()),
 
             draw_plot: gr.Plot(visible=False),
             draw_file: gr.File(visible=False),
@@ -257,12 +271,28 @@ def get_return(is_visible, extra_gr_dict: dict = None):
             x_label_textbox: gr.Textbox(visible=False),
             y_label_textbox: gr.Textbox(visible=False),
 
+            # [模型]
+            linear_regression_model_radio: gr.Radio(Dataset.get_linear_regression_model_list(), visible=Dataset.get_linear_regression_mark(), label=LN.linear_regression_model_radio),
+
             # [绘图]
             learning_curve_checkboxgroup: gr.Checkboxgroup(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.learning_curve_checkboxgroup),
-            learning_curve_train_button: gr.Button(LN.learning_curve_train_button, visible=Dataset.check_before_train()),
-            learning_curve_validation_button: gr.Button(LN.learning_curve_validation_button, visible=Dataset.check_before_train()),
+            learning_curve_button: gr.Button(LN.learning_curve_button, visible=Dataset.check_before_train()),
             shap_beeswarm_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.shap_beeswarm_radio),
+            shap_beeswarm_type: gr.Radio(Dataset.get_shap_beeswarm_plot_type(), visible=Dataset.check_before_train(), label=LN.shap_beeswarm_type),
             shap_beeswarm_button: gr.Button(LN.shap_beeswarm_button, visible=Dataset.check_before_train()),
+            data_fit_checkboxgroup: gr.Checkboxgroup(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.data_fit_checkboxgroup),
+            data_fit_button: gr.Button(LN.data_fit_button, visible=Dataset.check_before_train()),
+            waterfall_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.waterfall_radio),
+            waterfall_number: gr.Slider(0, Dataset.get_total_row_num(), value=0, step=1, visible=Dataset.check_before_train(), label=LN.waterfall_number),
+            waterfall_button: gr.Button(LN.waterfall_button, visible=Dataset.check_before_train()),
+            force_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.force_radio),
+            force_number_1: gr.Slider(0, Dataset.get_total_row_num(), value=0, step=1, visible=Dataset.check_before_train(), label=LN.force_number_1),
+            force_number_2: gr.Slider(0, Dataset.get_total_row_num(), value=0, step=1, visible=Dataset.check_before_train(), label=LN.force_number_2),
+            force_button: gr.Button(LN.force_button, visible=Dataset.check_before_train()),
+            dependence_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(), label=LN.dependence_radio),
+            dependence_col: gr.Radio(Dataset.get_col_list(), visible=Dataset.check_before_train(), label=LN.dependence_col),
+            dependence_button: gr.Button(LN.dependence_button, visible=Dataset.check_before_train()),
+
         }
 
         gr_dict.update(dict(zip(colorpickers, [gr.ColorPicker(visible=False)] * StaticValue.max_num)))
@@ -295,10 +325,11 @@ def get_return(is_visible, extra_gr_dict: dict = None):
         standardize_data_checkboxgroup: gr.Checkboxgroup(visible=False),
         standardize_data_button: gr.Button(visible=False),
         select_as_y_radio: gr.Radio(visible=False),
-        linear_regression_model_radio: gr.Radio(visible=False),
         model_optimize_radio: gr.Radio(visible=False),
         model_train_button: gr.Button(visible=False),
         model_train_checkbox: gr.Checkbox(visible=False),
+        model_train_metrics_dataframe: gr.Dataframe(visible=False),
+        model_train_params_dataframe: gr.Dataframe(visible=False),
         select_as_model_radio: gr.Radio(visible=False),
         choose_assign_radio: gr.Radio(visible=False),
 
@@ -308,12 +339,27 @@ def get_return(is_visible, extra_gr_dict: dict = None):
         x_label_textbox: gr.Textbox(visible=False),
         y_label_textbox: gr.Textbox(visible=False),
 
+        # [模型]
+        linear_regression_model_radio: gr.Radio(visible=False),
+
         # [绘图]
         learning_curve_checkboxgroup: gr.Checkboxgroup(visible=False),
-        learning_curve_train_button: gr.Button(visible=False),
-        learning_curve_validation_button: gr.Button(visible=False),
+        learning_curve_button: gr.Button(visible=False),
         shap_beeswarm_radio: gr.Radio(visible=False),
+        shap_beeswarm_type: gr.Radio(visible=False),
         shap_beeswarm_button: gr.Button(visible=False),
+        data_fit_checkboxgroup: gr.Checkboxgroup(visible=False),
+        data_fit_button: gr.Button(visible=False),
+        waterfall_radio: gr.Radio(visible=False),
+        waterfall_number: gr.Slider(visible=False),
+        waterfall_button: gr.Button(visible=False),
+        force_radio: gr.Radio(visible=False),
+        force_number_1: gr.Slider(visible=False),
+        force_number_2: gr.Slider(visible=False),
+        force_button: gr.Button(visible=False),
+        dependence_radio: gr.Radio(visible=False),
+        dependence_col: gr.Radio(visible=False),
+        dependence_button: gr.Button(visible=False),
     }
 
     gr_dict.update(dict(zip(colorpickers, [gr.ColorPicker(visible=False)] * StaticValue.max_num)))
@@ -337,6 +383,7 @@ class Dataset:
     select_y_mark = False
 
     container_dict = {
+        # [模型]
         MN.linear_regression: Container(),
         MN.polynomial_regression: Container(),
         MN.logistic_regression: Container(),
@@ -596,6 +643,7 @@ class Dataset:
         )
         container = Container(x_train, y_train, x_test, y_test, optimize)
 
+        # [模型]
         if cls.cur_model == MN.linear_regression:
             container = linear_regression(container, cls.get_linear_regression_model_name_mapping()[linear_regression_model_type])
         elif cls.cur_model == MN.polynomial_regression:
@@ -646,61 +694,23 @@ class Dataset:
     @classmethod
     def draw_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
         # [绘图]
-        if cls.visualize == MN.learning_curve_train:
-            return cls.draw_learning_curve_train_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
-        elif cls.visualize == MN.learning_curve_validation:
-            return cls.draw_learning_curve_validation_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+        if cls.visualize == MN.learning_curve:
+            return cls.draw_learning_curve_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
         elif cls.visualize == MN.shap_beeswarm:
             return cls.draw_shap_beeswarm_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+        elif cls.visualize == MN.data_fit:
+            return cls.draw_data_fit_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+        elif cls.visualize == MN.waterfall:
+            return cls.draw_waterfall_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+        elif cls.visualize == MN.force:
+            return cls.draw_force_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
+        elif cls.visualize == MN.dependence:
+            return cls.draw_dependence_plot(select_model, color_list, label_list, name, x_label, y_label, is_default)
 
     @classmethod
-    def draw_learning_curve_train_plot(cls, model_list, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
-        learning_curve_dict = {}
+    def draw_dependence_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
+        model_name = select_model.get_models()
 
-        for model_name in model_list:
-            model_name = cls.get_model_name_mapping_reverse()[model_name]
-            learning_curve_dict[model_name] = cls.container_dict[model_name].get_learning_curve_values()
-
-        color_cur_list = Config.COLORS if is_default else color_list
-        label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
-        x_cur_label = "Train Sizes" if is_default else x_label
-        y_cur_label = "Accuracy" if is_default else y_label
-        cur_name = "" if is_default else name
-
-        paint_object = PaintObject()
-        paint_object.set_color_cur_list(color_cur_list)
-        paint_object.set_label_cur_list(label_cur_list)
-        paint_object.set_x_cur_label(x_cur_label)
-        paint_object.set_y_cur_label(y_cur_label)
-        paint_object.set_name(cur_name)
-
-        return draw_learning_curve_total(learning_curve_dict, "train", paint_object)
-
-    @classmethod
-    def draw_learning_curve_validation_plot(cls, model_list, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
-        learning_curve_dict = {}
-
-        for model_name in model_list:
-            model_name = cls.get_model_name_mapping_reverse()[model_name]
-            learning_curve_dict[model_name] = cls.container_dict[model_name].get_learning_curve_values()
-
-        color_cur_list = Config.COLORS if is_default else color_list
-        label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
-        x_cur_label = "Train Sizes" if is_default else x_label
-        y_cur_label = "Accuracy" if is_default else y_label
-        cur_name = "" if is_default else name
-
-        paint_object = PaintObject()
-        paint_object.set_color_cur_list(color_cur_list)
-        paint_object.set_label_cur_list(label_cur_list)
-        paint_object.set_x_cur_label(x_cur_label)
-        paint_object.set_y_cur_label(y_cur_label)
-        paint_object.set_name(cur_name)
-
-        return draw_learning_curve_total(learning_curve_dict, "validation", paint_object)
-
-    @classmethod
-    def draw_shap_beeswarm_plot(cls, model_name, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
         model_name = cls.get_model_name_mapping_reverse()[model_name]
         container = cls.container_dict[model_name]
 
@@ -717,17 +727,157 @@ class Dataset:
         # paint_object.set_y_cur_label(y_cur_label)
         paint_object.set_name(cur_name)
 
-        return shap_calculate(container.get_model(), container.x_train, cls.data.columns.values, paint_object)
+        return draw_dependence(container.get_model(), container.x_train, cls.data.columns.values.tolist()[1:], select_model.get_dependence_col(), paint_object)
+
+    @classmethod
+    def draw_force_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
+        model_name = select_model.get_models()
+
+        model_name = cls.get_model_name_mapping_reverse()[model_name]
+        container = cls.container_dict[model_name]
+
+        # color_cur_list = Config.COLORS if is_default else color_list
+        # label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
+        # x_cur_label = "Train Sizes" if is_default else x_label
+        # y_cur_label = "Accuracy" if is_default else y_label
+        cur_name = "" if is_default else name
+
+        paint_object = PaintObject()
+        # paint_object.set_color_cur_list(color_cur_list)
+        # paint_object.set_label_cur_list(label_cur_list)
+        # paint_object.set_x_cur_label(x_cur_label)
+        # paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
+
+        return draw_force(container.get_model(), container.x_train, cls.data.columns.values.tolist()[1:], select_model.get_force_numbers(), paint_object)
+
+    @classmethod
+    def draw_waterfall_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
+        model_name = select_model.get_models()
+
+        model_name = cls.get_model_name_mapping_reverse()[model_name]
+        container = cls.container_dict[model_name]
+
+        # color_cur_list = Config.COLORS if is_default else color_list
+        # label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
+        # x_cur_label = "Train Sizes" if is_default else x_label
+        # y_cur_label = "Accuracy" if is_default else y_label
+        cur_name = "" if is_default else name
+
+        paint_object = PaintObject()
+        # paint_object.set_color_cur_list(color_cur_list)
+        # paint_object.set_label_cur_list(label_cur_list)
+        # paint_object.set_x_cur_label(x_cur_label)
+        # paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
+
+        return draw_waterfall(container.get_model(), container.x_train, cls.data.columns.values.tolist()[1:], select_model.get_waterfall_number(), paint_object)
+
+    @classmethod
+    def draw_learning_curve_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
+        cur_dict = {}
+
+        model_list = select_model.get_models()
+
+        for model_name in model_list:
+            model_name = cls.get_model_name_mapping_reverse()[model_name]
+            cur_dict[model_name] = cls.container_dict[model_name].get_learning_curve_values()
+
+        color_cur_list = Config.COLORS if is_default else color_list
+        if is_default:
+            label_cur_list = []
+            for x in cur_dict.keys():
+                label_cur_list.append("train " + str(x))
+                label_cur_list.append("validation " + str(x))
+        else:
+            label_cur_list = label_list
+
+        x_cur_label = "Train Sizes" if is_default else x_label
+        y_cur_label = "Accuracy" if is_default else y_label
+        cur_name = "" if is_default else name
+
+        paint_object = PaintObject()
+        paint_object.set_color_cur_list(color_cur_list)
+        paint_object.set_label_cur_list(label_cur_list)
+        paint_object.set_x_cur_label(x_cur_label)
+        paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
+
+        return draw_learning_curve_total(cur_dict, paint_object)
+
+    @classmethod
+    def draw_shap_beeswarm_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
+        model_name = select_model.get_models()
+
+        model_name = cls.get_model_name_mapping_reverse()[model_name]
+        container = cls.container_dict[model_name]
+
+        # color_cur_list = Config.COLORS if is_default else color_list
+        # label_cur_list = [x for x in learning_curve_dict.keys()] if is_default else label_list
+        # x_cur_label = "Train Sizes" if is_default else x_label
+        # y_cur_label = "Accuracy" if is_default else y_label
+        cur_name = "" if is_default else name
+
+        paint_object = PaintObject()
+        # paint_object.set_color_cur_list(color_cur_list)
+        # paint_object.set_label_cur_list(label_cur_list)
+        # paint_object.set_x_cur_label(x_cur_label)
+        # paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
+
+        return draw_shap_beeswarm(container.get_model(), container.x_train, cls.data.columns.values.tolist()[1:], select_model.get_beeswarm_plot_type(), paint_object)
+
+    @classmethod
+    def draw_data_fit_plot(cls, select_model, color_list: list, label_list: list, name: str, x_label: str, y_label: str, is_default: bool):
+        cur_dict = {}
+
+        model_list = select_model.get_models()
+
+        for model_name in model_list:
+            model_name = cls.get_model_name_mapping_reverse()[model_name]
+            cur_dict[model_name] = cls.container_dict[model_name].get_data_fit_values()
+
+        color_cur_list = Config.COLORS if is_default else color_list
+        if is_default:
+            label_cur_list = []
+            for x in cur_dict.keys():
+                label_cur_list.append("pred " + str(x))
+            label_cur_list.append("real data")
+        else:
+            label_cur_list = label_list
+
+        x_cur_label = "n value" if is_default else x_label
+        y_cur_label = "y value" if is_default else y_label
+        cur_name = "" if is_default else name
+
+        paint_object = PaintObject()
+        paint_object.set_color_cur_list(color_cur_list)
+        paint_object.set_label_cur_list(label_cur_list)
+        paint_object.set_x_cur_label(x_cur_label)
+        paint_object.set_y_cur_label(y_cur_label)
+        paint_object.set_name(cur_name)
+
+        return draw_data_fit_total(cur_dict, paint_object)
+
+    @classmethod
+    def get_shap_beeswarm_plot_type(cls):
+        return ["bar", "violin"]
 
     @classmethod
     def get_file(cls):
         # [绘图]
-        if cls.visualize == MN.learning_curve_train:
-            return FilePath.png_base.format(FilePath.learning_curve_train_plot)
-        elif cls.visualize == MN.learning_curve_validation:
-            return FilePath.png_base.format(FilePath.learning_curve_validation_plot)
+        if cls.visualize == MN.learning_curve:
+            return FilePath.png_base.format(FilePath.learning_curve_plot)
         elif cls.visualize == MN.shap_beeswarm:
             return FilePath.png_base.format(FilePath.shap_beeswarm_plot)
+        elif cls.visualize == MN.data_fit:
+            return FilePath.png_base.format(FilePath.data_fit_plot)
+        elif cls.visualize == MN.waterfall:
+            return FilePath.png_base.format(FilePath.waterfall_plot)
+        elif cls.visualize == MN.force:
+            return FilePath.png_base.format(FilePath.force_plot)
+        elif cls.visualize == MN.dependence:
+            return FilePath.png_base.format(FilePath.dependence_plot)
 
     @classmethod
     def check_file(cls):
@@ -803,6 +953,31 @@ class Dataset:
 
         return true_list + [gr.Textbox(visible=False)] * (StaticValue.max_num - cur_num)
 
+    @classmethod
+    def get_model_train_metrics_dataframe(cls):
+        if cls.cur_model != "" and cls.get_model_container_status():
+            columns_list = ["指标", "数值"]
+
+            output_dict = cls.container_dict[cls.cur_model].get_info()["指标"]
+
+            output_df = pd.DataFrame(columns=columns_list)
+            output_df["指标"] = [x for x in output_dict.keys() if x in ChooseModelMetrics.choose(cls.cur_model)]
+            output_df["数值"] = [output_dict[x] for x in output_df["指标"]]
+
+            return output_df
+    @classmethod
+    def get_model_train_params_dataframe(cls):
+        if cls.cur_model != "" and cls.get_model_container_status():
+            columns_list = ["参数", "数值"]
+
+            output_dict = cls.container_dict[cls.cur_model].get_info()["参数"]
+
+            output_df = pd.DataFrame(columns=columns_list)
+            output_df["参数"] = [x for x in output_dict.keys() if x in ChooseModelParams.choose(cls.cur_model).keys()]
+            output_df["数值"] = [output_dict[x] for x in output_df["参数"]]
+
+            return output_df
+
 
 def choose_assign(assign: str):
     Dataset.choose_assign(assign)
@@ -817,28 +992,54 @@ def select_as_model(model_name: str):
 
 
 # [绘图]
+def dependence_first_draw_plot(*inputs):
+    Dataset.visualize = MN.dependence
+    return first_draw_plot(inputs)
+
+
+def force_first_draw_plot(*inputs):
+    Dataset.visualize = MN.force
+    return first_draw_plot(inputs)
+
+
+def waterfall_first_draw_plot(*inputs):
+    Dataset.visualize = MN.waterfall
+    return first_draw_plot(inputs)
+
+
+def data_fit_first_draw_plot(*inputs):
+    Dataset.visualize = MN.data_fit
+    return first_draw_plot(inputs)
+
+
 def shap_beeswarm_first_draw_plot(*inputs):
     Dataset.visualize = MN.shap_beeswarm
     return first_draw_plot(inputs)
 
 
-def learning_curve_validation_first_draw_plot(*inputs):
-    Dataset.visualize = MN.learning_curve_validation
-    return first_draw_plot(inputs)
-
-
-def learning_curve_train_first_draw_plot(*inputs):
-    Dataset.visualize = MN.learning_curve_train
+def learning_curve_first_draw_plot(*inputs):
+    Dataset.visualize = MN.learning_curve
     return first_draw_plot(inputs)
 
 
 def first_draw_plot(inputs):
-    select_model = inputs[0]
+    select_model = SelectModel()
+    select_model.set_models(inputs[0])
     x_label = ""
     y_label = ""
     name = ""
     color_list = []
     label_list = []
+
+    # [绘图]
+    if Dataset.visualize == MN.shap_beeswarm:
+        select_model.set_beeswarm_plot_type(inputs[1])
+    elif Dataset.visualize == MN.waterfall:
+        select_model.set_waterfall_number(inputs[1])
+    elif Dataset.visualize == MN.force:
+        select_model.set_force_numbers(inputs[1], inputs[2])
+    elif Dataset.visualize == MN.dependence:
+        select_model.set_dependence_col(inputs[1])
 
     cur_plt, paint_object = Dataset.draw_plot(select_model, color_list, label_list, name, x_label, y_label, True)
 
@@ -857,16 +1058,28 @@ def non_first_draw_plot(inputs):
     label_list = list(inputs[StaticValue.max_num+3: 2*StaticValue.max_num+3])
     start_index = 2*StaticValue.max_num+3
 
+    select_model = SelectModel()
+
     # 绘图
-    if Dataset.visualize == MN.learning_curve_train:
-        select_model = inputs[start_index]
-    elif Dataset.visualize == MN.learning_curve_validation:
-        select_model = inputs[start_index]
+    if Dataset.visualize == MN.learning_curve:
+        select_model.set_models(inputs[start_index+0])
+        select_model.set_beeswarm_plot_type(inputs[start_index+1])
     elif Dataset.visualize == MN.shap_beeswarm:
-        select_model = inputs[start_index+1]
+        select_model.set_models(inputs[start_index+2])
+    elif Dataset.visualize == MN.data_fit:
+        select_model.set_models(inputs[start_index+3])
+    elif Dataset.visualize == MN.waterfall:
+        select_model.set_models(inputs[start_index+4])
+        select_model.set_waterfall_number(inputs[start_index+5])
+    elif Dataset.visualize == MN.force:
+        select_model.set_models(inputs[start_index+6])
+        select_model.set_force_numbers(inputs[start_index+7], inputs[start_index+8])
+    elif Dataset.visualize == MN.dependence:
+        select_model.set_models(inputs[start_index+9])
+        select_model.set_dependence_col(inputs[start_index+10])
 
     else:
-        select_model = inputs[start_index: start_index+1]
+        select_model.set_models(inputs[start_index])
 
     cur_plt, paint_object = Dataset.draw_plot(select_model, color_list, label_list, name, x_label, y_label, False)
 
@@ -877,15 +1090,24 @@ def first_draw_plot_with_non_first_draw_plot(cur_plt, paint_object):
     extra_gr_dict = {}
 
     # [绘图]
-    if Dataset.visualize == MN.learning_curve_train:
-        cur_plt.savefig(FilePath.png_base.format(FilePath.learning_curve_train_plot), dpi=300)
-        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.learning_curve_train_plot)})
-    elif Dataset.visualize == MN.learning_curve_validation:
-        cur_plt.savefig(FilePath.png_base.format(FilePath.learning_curve_validation_plot), dpi=300)
-        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.learning_curve_validation_plot)})
+    if Dataset.visualize == MN.learning_curve:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.learning_curve_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.learning_curve_plot)})
     elif Dataset.visualize == MN.shap_beeswarm:
         cur_plt.savefig(FilePath.png_base.format(FilePath.shap_beeswarm_plot), dpi=300)
         extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.shap_beeswarm_plot)})
+    elif Dataset.visualize == MN.data_fit:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.data_fit_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.data_fit_plot)})
+    elif Dataset.visualize == MN.waterfall:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.waterfall_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.waterfall_plot)})
+    elif Dataset.visualize == MN.force:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.force_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.force_plot)})
+    elif Dataset.visualize == MN.dependence:
+        cur_plt.savefig(FilePath.png_base.format(FilePath.dependence_plot), dpi=300)
+        extra_gr_dict.update({draw_plot: gr.Plot(cur_plt, visible=True, label=LN.dependence_plot)})
 
     extra_gr_dict.update(dict(zip(colorpickers, Dataset.colorpickers_change(paint_object))))
     extra_gr_dict.update(dict(zip(color_textboxs, Dataset.color_textboxs_change(paint_object))))
@@ -897,6 +1119,7 @@ def first_draw_plot_with_non_first_draw_plot(cur_plt, paint_object):
     return get_return_extra(True, extra_gr_dict)
 
 
+# [模型]
 def train_model(optimize, linear_regression_model_type):
     Dataset.train_model(optimize, linear_regression_model_type)
 
@@ -924,9 +1147,7 @@ def change_data_type_to_float():
 def encode_label(col_list: list):
     Dataset.encode_label(col_list)
 
-    return get_return(True, {
-        display_encode_label_dataframe: gr.Dataframe(Dataset.get_str2int_mappings_df(), type="pandas", visible=True,
-                                                     label=LN.display_encode_label_dataframe)})
+    return get_return(True, {display_encode_label_dataframe: gr.Dataframe(Dataset.get_str2int_mappings_df(), type="pandas", visible=True, label=LN.display_encode_label_dataframe)})
 
 
 def del_duplicate():
@@ -1031,23 +1252,45 @@ with gr.Blocks() as demo:
 
         # 数据模型
         with gr.Accordion("数据模型"):
+            # [模型]
             select_as_model_radio = gr.Radio(visible=False)
             linear_regression_model_radio = gr.Radio(visible=False)
             model_optimize_radio = gr.Radio(visible=False)
             model_train_button = gr.Button(visible=False)
             model_train_checkbox = gr.Checkbox(visible=False)
+            model_train_params_dataframe = gr.Dataframe(visible=False)
+            model_train_metrics_dataframe = gr.Dataframe(visible=False)
 
         # 可视化
         with gr.Accordion("数据可视化"):
             with gr.Tab("学习曲线图"):
                 learning_curve_checkboxgroup = gr.Checkboxgroup(visible=False)
-                with gr.Row():
-                    learning_curve_train_button = gr.Button(visible=False)
-                    learning_curve_validation_button = gr.Button(visible=False)
+                learning_curve_button = gr.Button(visible=False)
 
-            with gr.Tab("蜂群特征图"):
+            with gr.Tab("数据拟合图"):
+                data_fit_checkboxgroup = gr.Checkboxgroup(visible=False)
+                data_fit_button = gr.Button(visible=False)
+
+            with gr.Tab("特征蜂群图"):
                 shap_beeswarm_radio = gr.Radio(visible=False)
+                shap_beeswarm_type = gr.Radio(visible=False)
                 shap_beeswarm_button = gr.Button(visible=False)
+
+            with gr.Tab("特征瀑布图"):
+                waterfall_radio = gr.Radio(visible=False)
+                waterfall_number = gr.Slider(visible=False)
+                waterfall_button = gr.Button(visible=False)
+
+            with gr.Tab("特征力图"):
+                force_radio = gr.Radio(visible=False)
+                force_number_1 = gr.Slider(visible=False)
+                force_number_2 = gr.Slider(visible=False)
+                force_button = gr.Button(visible=False)
+
+            with gr.Tab("特征依赖图"):
+                dependence_radio = gr.Radio(visible=False)
+                dependence_col = gr.Radio(visible=False)
+                dependence_button = gr.Button(visible=False)
 
             legend_labels_textboxs = []
             with gr.Accordion("图例"):
@@ -1108,26 +1351,44 @@ with gr.Blocks() as demo:
 
     # 数据模型
     select_as_model_radio.change(fn=select_as_model, inputs=[select_as_model_radio], outputs=get_outputs())
+
+    # [模型]
     model_train_button.click(fn=train_model, inputs=[model_optimize_radio, linear_regression_model_radio], outputs=get_outputs())
 
+    # [绘图]
+
     # 可视化
-    learning_curve_train_button.click(fn=learning_curve_train_first_draw_plot, inputs=[learning_curve_checkboxgroup], outputs=get_outputs())
-    learning_curve_validation_button.click(fn=learning_curve_validation_first_draw_plot, inputs=[learning_curve_checkboxgroup], outputs=get_outputs())
-    shap_beeswarm_button.click(fn=shap_beeswarm_first_draw_plot, inputs=[shap_beeswarm_radio], outputs=get_outputs())
+    learning_curve_button.click(fn=learning_curve_first_draw_plot, inputs=[learning_curve_checkboxgroup], outputs=get_outputs())
+    shap_beeswarm_button.click(fn=shap_beeswarm_first_draw_plot, inputs=[shap_beeswarm_radio] + [shap_beeswarm_type], outputs=get_outputs())
+    data_fit_button.click(fn=data_fit_first_draw_plot, inputs=[data_fit_checkboxgroup], outputs=get_outputs())
+    waterfall_button.click(fn=waterfall_first_draw_plot, inputs=[waterfall_radio] + [waterfall_number], outputs=get_outputs())
+    force_button.click(fn=force_first_draw_plot, inputs=[force_radio] + [force_number_1] + [force_number_2], outputs=get_outputs())
+    dependence_button.click(fn=dependence_first_draw_plot, inputs=[dependence_radio] + [dependence_col], outputs=get_outputs())
 
     title_name_textbox.blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
-                            + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+                            + [learning_curve_checkboxgroup] + [shap_beeswarm_radio] + [shap_beeswarm_type] + [data_fit_checkboxgroup] + [waterfall_radio] + [waterfall_number]
+                            + [force_radio] + [force_number_1] + [force_number_2] + [dependence_radio] + [dependence_col], outputs=get_outputs())
+
     x_label_textbox.blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
-                         + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+                         + [learning_curve_checkboxgroup] + [shap_beeswarm_radio] + [shap_beeswarm_type] + [data_fit_checkboxgroup] + [waterfall_radio] + [waterfall_number]
+                         + [force_radio] + [force_number_1] + [force_number_2] + [dependence_radio] + [dependence_col], outputs=get_outputs())
+
     y_label_textbox.blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
-                         + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+                         + [learning_curve_checkboxgroup] + [shap_beeswarm_radio] + [shap_beeswarm_type] + [data_fit_checkboxgroup] + [waterfall_radio] + [waterfall_number]
+                         + [force_radio] + [force_number_1] + [force_number_2] + [dependence_radio] + [dependence_col], outputs=get_outputs())
+
     for i in range(StaticValue.max_num):
         colorpickers[i].blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
-                             + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+                             + [learning_curve_checkboxgroup] + [shap_beeswarm_radio] + [shap_beeswarm_type] + [data_fit_checkboxgroup] + [waterfall_radio] + [waterfall_number]
+                             + [force_radio] + [force_number_1] + [force_number_2] + [dependence_radio] + [dependence_col], outputs=get_outputs())
+
         color_textboxs[i].blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + color_textboxs + legend_labels_textboxs
-                               + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+                               + [learning_curve_checkboxgroup] + [shap_beeswarm_radio] + [shap_beeswarm_type] + [data_fit_checkboxgroup] + [waterfall_radio] + [waterfall_number]
+                               + [force_radio] + [force_number_1] + [force_number_2] + [dependence_radio] + [dependence_col], outputs=get_outputs())
+
         legend_labels_textboxs[i].blur(fn=out_non_first_draw_plot, inputs=[title_name_textbox] + [x_label_textbox] + [y_label_textbox] + colorpickers + legend_labels_textboxs
-                                       + [learning_curve_checkboxgroup] + [shap_beeswarm_radio], outputs=get_outputs())
+                                       + [learning_curve_checkboxgroup] + [shap_beeswarm_radio] + [shap_beeswarm_type] + [data_fit_checkboxgroup] + [waterfall_radio] + [waterfall_number]
+                                       + [force_radio] + [force_number_1] + [force_number_2] + [dependence_radio] + [dependence_col], outputs=get_outputs())
 
 if __name__ == "__main__":
     demo.launch()

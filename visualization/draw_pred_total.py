@@ -7,29 +7,27 @@ from coding.llh.static.config import Config
 def draw_pred_total(input_dict):
     plt.figure(figsize=(10, 6))
 
-    i = 0
-    for name, cur_list in input_dict.items():
-        mylist = cur_list
+    for i, name, cur_list in enumerate(input_dict.items()):
+        if i == len(input_dict.keys())-1:
+            final_list = cur_list
+
         plt.plot(
             np.array([x for x in range(len(cur_list[0]))]),
             cur_list[0],
             "-",
-            color=Config.COLORS_4[i],
+            color=paint_object.get_color_cur_list()[i],
             alpha=0.9,
-            label=name
+            label=paint_object.get_label_cur_list()[i]
         )
-        i += 1
 
     plt.plot(
-        np.array([x for x in range(len(mylist[1]))]),
-        mylist[1],
+        np.array([x for x in range(len(final_list[1]))]),
+        final_list[1],
         "--",
-        color=Config.COLORS_4[1],
+        color=paint_object.get_color_cur_list()[len(input_dict.keys())],
         alpha=0.9,
-        label="actual data"
+        label=paint_object.get_label_cur_list[len(input_dict.keys())]
     )
-
-    title = "pred curve"
 
     plt.xlabel("Sizes")
     plt.ylabel("Value")

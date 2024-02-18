@@ -1,72 +1,65 @@
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
-from sklearn.model_selection import learning_curve
 import numpy as np
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.model_selection import learning_curve
 
-from analysis.shap_model import shap_calculate
-from coding.llh.static.config import Config
-from coding.llh.static.process import grid_search, bayes_search
-from coding.llh.visualization.draw_learning_curve import draw_learning_curve
-from coding.llh.visualization.draw_line_graph import draw_line_graph
-from coding.llh.visualization.draw_scatter_line_graph import draw_scatter_line_graph
-from coding.llh.metrics.calculate_classification_metrics import calculate_classification_metrics
-from coding.llh.metrics.calculate_regression_metrics import calculate_regression_metrics
-from sklearn.ensemble import RandomForestRegressor
+from analysis.shap_model import draw_shap_beeswarm
+from metrics.calculate_regression_metrics import calculate_regression_metrics
+from static.config import Config
+from static.new_class import Container
+from static.process import grid_search, bayes_search
 
 
-def gradient_boosting_regression(feature_names, x, y, x_train_and_validate, y_train_and_validate, x_test, y_test, train_and_validate_data_list=None, hyper_params_optimize=None):
+class GradientBoostingParams:
+    @classmethod
+    def get_params(cls):
+        return {
+            'n_estimators': [50, 100, 150],
+            'learning_rate': [0.01, 0.1, 0.2],
+            'max_depth': [3, 5, 7],
+            'min_samples_split': [2, 5, 10],
+            'min_samples_leaf': [1, 2, 4]
+        }
+
+
+# 梯度提升回归
+def gradient_boosting_regression(container: Container):
+    x_train = container.x_train
+    y_train = container.y_train
+    x_test = container.x_test
+    y_test = container.y_test
+    hyper_params_optimize = container.hyper_params_optimize
     info = {}
-    model_name = "Double Exponential Smoothing Plus"
 
-    model = GradientBoostingRegressor()
-    params = {
-        'n_estimators': [50, 100, 150],
-        'learning_rate': [0.01, 0.1, 0.2],
-        'max_depth': [3, 5, 7],
-        'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 4]
-    }
+    gradient_boosting_regression_model = GradientBoostingRegressor(random_state=Config.RANDOM_STATE)
+    params = GradientBoostingParams.get_params()
 
     if hyper_params_optimize == "grid_search":
-        best_model = grid_search(params, model, x_train_and_validate, y_train_and_validate)
+        best_model = grid_search(params, gradient_boosting_regression_model, x_train, y_train)
     elif hyper_params_optimize == "bayes_search":
-        best_model = bayes_search(params, model, x_train_and_validate, y_train_and_validate)
+        best_model = bayes_search(params, gradient_boosting_regression_model, x_train, y_train)
     else:
-        best_model = model
-        best_model.fit(x, y)
+        best_model = gradient_boosting_regression_model
+        best_model.fit(x_train, y_train)
 
-    info["{} Params".format(model_name)] = best_model.get_params()
+    info["参数"] = best_model.get_params()
 
-    y_pred = best_model.predict(x_test).reshape(-1, 1)
+    y_pred = best_model.predict(x_test)
+    # y_pred = best_model.predict(x_test).reshape(-1, 1)
+    container.set_y_pred(y_pred)
 
-    # 0202:
-
-    train_sizes, train_scores, test_scores = learning_curve(best_model, x, y, cv=5, scoring="r2")
+    train_sizes, train_scores, test_scores = learning_curve(best_model, x_train, y_train, cv=5)
 
     train_scores_mean = np.mean(train_scores, axis=1)
     train_scores_std = np.std(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)
     test_scores_std = np.std(test_scores, axis=1)
+    container.set_learning_curve_values(train_sizes, train_scores_mean, train_scores_std, test_scores_mean,
+                                        test_scores_std)
 
-    # 修正
-    train_scores_mean[0] = 0.984
-    test_scores_mean[1] = 0.89
-    test_scores_mean[2] = 0.93
-    test_scores_mean[3] = 0.97
-    test_scores_mean[4] = 0.98
+    info["指标"] = calculate_regression_metrics(y_pred, y_test)
 
+    container.set_info(info)
+    container.set_status("trained")
+    container.set_model(best_model)
 
-    # draw_learning_curve(train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
-
-    # draw_scatter_line_graph(x_test, y_pred, y_test, lr_coef, lr_intercept, ["pred", "real"], "logistic regression model residual plot")
-
-    info.update(calculate_regression_metrics(y_pred, y_test, model_name))
-    # info.update(calculate_classification_metrics(y_pred, y_test, "logistic regression"))
-    # mae, mse, rsme, r2, ar2 = calculate_regression_metrics(y_pred, y_test, model_name)
-
-    shap_calculate(best_model, x[:1000], feature_names)
-
-    # return y_pred, info
-    return y_pred, info, train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std
+    return container

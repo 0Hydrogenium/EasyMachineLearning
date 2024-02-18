@@ -11,7 +11,23 @@ from sklearn.model_selection import learning_curve
 from static.process import grid_search, bayes_search
 from metrics.calculate_classification_metrics import calculate_classification_metrics
 from metrics.calculate_regression_metrics import calculate_regression_metrics
-from app import Container
+from static.new_class import *
+from static.config import Config
+
+
+class LinearRegressionParams:
+    @classmethod
+    def get_params(cls, sort):
+        if sort in ["Lasso", "Ridge", "ElasticNet"]:
+            return {
+                "fit_intercept": [True, False],
+                "alpha": [0.001, 0.01, 0.1, 1.0, 10.0],
+                "random_state": [Config.RANDOM_STATE]
+            }
+        else:
+            return {
+                "fit_intercept": [True, False]
+            }
 
 
 # 线性回归
@@ -24,28 +40,17 @@ def linear_regression(container: Container, model=None):
     info = {}
 
     if model == "Lasso":
-        linear_regression_model = Lasso(alpha=0.1)
-        params = {
-            "fit_intercept": [True, False],
-            "alpha": [0.001, 0.01, 0.1, 1.0, 10.0]
-        }
+        linear_regression_model = Lasso(alpha=0.1, random_state=Config.RANDOM_STATE)
+        params = LinearRegressionParams.get_params(model)
     elif model == "Ridge":
-        linear_regression_model = Ridge(alpha=0.1)
-        params = {
-            "fit_intercept": [True, False],
-            "alpha": [0.001, 0.01, 0.1, 1.0, 10.0]
-        }
+        linear_regression_model = Ridge(alpha=0.1, random_state=Config.RANDOM_STATE)
+        params = LinearRegressionParams.get_params(model)
     elif model == "ElasticNet":
-        linear_regression_model = ElasticNet(alpha=0.1)
-        params = {
-            "fit_intercept": [True, False],
-            "alpha": [0.001, 0.01, 0.1, 1.0, 10.0]
-        }
+        linear_regression_model = ElasticNet(alpha=0.1, random_state=Config.RANDOM_STATE)
+        params = LinearRegressionParams.get_params(model)
     else:
         linear_regression_model = LinearRegression()
-        params = {
-            "fit_intercept": [True, False]
-        }
+        params = LinearRegressionParams.get_params(model)
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, linear_regression_model, x_train, y_train)
@@ -55,13 +60,13 @@ def linear_regression(container: Container, model=None):
         best_model = linear_regression_model
         best_model.fit(x_train, y_train)
 
-    info["linear regression Params"] = best_model.get_params()
+    info["参数"] = best_model.get_params()
 
-    lr_intercept = best_model.intercept_
-    info["Intercept of linear regression equation"] = lr_intercept
-
-    lr_coef = best_model.coef_
-    info["Coefficients of linear regression equation"] = lr_coef
+    # lr_intercept = best_model.intercept_
+    # info["Intercept of linear regression equation"] = lr_intercept
+    #
+    # lr_coef = best_model.coef_
+    # info["Coefficients of linear regression equation"] = lr_coef
 
     y_pred = best_model.predict(x_test)
     container.set_y_pred(y_pred)
@@ -72,15 +77,25 @@ def linear_regression(container: Container, model=None):
     train_scores_std = np.std(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)
     test_scores_std = np.std(test_scores, axis=1)
-    container.set_learning_curve_values(train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
+    container.set_learning_curve_values(train_sizes, train_scores_mean, train_scores_std, test_scores_mean,
+                                        test_scores_std)
 
-    info.update(calculate_regression_metrics(y_pred, y_test, "linear regression"))
+    info["参数"] = calculate_regression_metrics(y_pred, y_test)
 
     container.set_info(info)
     container.set_status("trained")
     container.set_model(best_model)
 
     return container
+
+
+class PolynomialRegressionParams:
+    @classmethod
+    def get_params(cls):
+        return {
+            "polynomial_features__degree": [2, 3],
+            "linear_regression_model__fit_intercept": [True, False]
+        }
 
 
 # 多项式回归
@@ -97,10 +112,7 @@ def polynomial_regression(container: Container):
 
     polynomial_regression_model = Pipeline([("polynomial_features", polynomial_features),
                                             ("linear_regression_model", linear_regression_model)])
-    params = {
-        "polynomial_features__degree": [2, 3],
-        "linear_regression_model__fit_intercept": [True, False]
-    }
+    params = PolynomialRegressionParams.get_params()
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, polynomial_regression_model, x_train, y_train)
@@ -110,16 +122,16 @@ def polynomial_regression(container: Container):
         best_model = polynomial_regression_model
         best_model.fit(x_train, y_train)
 
-    info["polynomial regression Params"] = best_model.get_params()
+    info["参数"] = best_model.get_params()
 
-    feature_names = best_model["polynomial_features"].get_feature_names_out()
-    info["Feature names of polynomial regression"] = feature_names
-
-    lr_intercept = best_model["linear_regression_model"].intercept_
-    info["Intercept of polynomial regression equation"] = lr_intercept
-
-    lr_coef = best_model["linear_regression_model"].coef_
-    info["Coefficients of polynomial regression equation"] = lr_coef
+    # feature_names = best_model["polynomial_features"].get_feature_names_out()
+    # info["Feature names of polynomial regression"] = feature_names
+    #
+    # lr_intercept = best_model["linear_regression_model"].intercept_
+    # info["Intercept of polynomial regression equation"] = lr_intercept
+    #
+    # lr_coef = best_model["linear_regression_model"].coef_
+    # info["Coefficients of polynomial regression equation"] = lr_coef
 
     x_test_ = best_model["polynomial_features"].fit_transform(x_test)
     y_pred = best_model["linear_regression_model"].predict(x_test_)
@@ -133,7 +145,7 @@ def polynomial_regression(container: Container):
     test_scores_std = np.std(test_scores, axis=1)
     container.set_learning_curve_values(train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
 
-    info.update(calculate_regression_metrics(y_pred, y_test, "polynomial regression"))
+    info["指标"] = calculate_regression_metrics(y_pred, y_test)
 
     container.set_info(info)
     container.set_status("trained")
@@ -142,7 +154,18 @@ def polynomial_regression(container: Container):
     return container
 
 
-# 逻辑斯谛回归
+class LogisticRegressionParams:
+    @classmethod
+    def get_params(cls):
+        return {
+            "C": [0.001, 0.01, 0.1, 1.0, 10.0],
+            "max_iter": [100, 200, 300],
+            "solver": ["liblinear", "lbfgs", "newton-cg", "sag", "saga"],
+            "random_state": [Config.RANDOM_STATE]
+        }
+
+
+# 逻辑斯谛分类
 def logistic_regression(container: Container):
     x_train = container.x_train
     y_train = container.y_train
@@ -151,12 +174,8 @@ def logistic_regression(container: Container):
     hyper_params_optimize = container.hyper_params_optimize
     info = {}
 
-    logistic_regression_model = LogisticRegression()
-    params = {
-        "C": [0.001, 0.01, 0.1, 1.0, 10.0],
-        "max_iter": [100, 200, 300],
-        "solver": ["liblinear", "lbfgs", "newton-cg", "sag", "saga"]
-    }
+    logistic_regression_model = LogisticRegression(random_state=Config.RANDOM_STATE)
+    params = LogisticRegressionParams.get_params()
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, logistic_regression_model, x_train, y_train)
@@ -166,13 +185,13 @@ def logistic_regression(container: Container):
         best_model = logistic_regression_model
         best_model.fit(x_train, y_train)
 
-    info["logistic regression Params"] = best_model.get_params()
+    info["参数"] = best_model.get_params()
 
-    lr_intercept = best_model.intercept_
-    info["Intercept of logistic regression equation"] = lr_intercept.tolist()
-
-    lr_coef = best_model.coef_
-    info["Coefficients of logistic regression equation"] = lr_coef.tolist()
+    # lr_intercept = best_model.intercept_
+    # info["Intercept of logistic regression equation"] = lr_intercept.tolist()
+    #
+    # lr_coef = best_model.coef_
+    # info["Coefficients of logistic regression equation"] = lr_coef.tolist()
 
     y_pred = best_model.predict(x_test)
     container.set_y_pred(y_pred)
@@ -183,9 +202,10 @@ def logistic_regression(container: Container):
     train_scores_std = np.std(train_scores, axis=1)
     test_scores_mean = np.mean(test_scores, axis=1)
     test_scores_std = np.std(test_scores, axis=1)
-    container.set_learning_curve_values(train_sizes, train_scores_mean, train_scores_std, test_scores_mean, test_scores_std)
+    container.set_learning_curve_values(train_sizes, train_scores_mean, train_scores_std, test_scores_mean,
+                                        test_scores_std)
 
-    info.update(calculate_classification_metrics(y_pred, y_test, "logistic regression"))
+    info["指标"] = calculate_classification_metrics(y_pred, y_test)
 
     container.set_info(info)
     container.set_status("trained")
