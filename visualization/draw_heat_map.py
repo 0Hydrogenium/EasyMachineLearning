@@ -2,16 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from coding.llh.static.config import Config
+from static.config import Config
 
 
-# Draw heat map
-def draw_heat_map(x_data, title, is_rotate, col_name):
-    # col_name = np.delete(col_name, np.where(col_name == "swing"))
-
+def draw_heat_map(x_data, col_list, paint_object, will_rotate=False):
     plt.rcParams.update({'figure.autolayout': True})
 
-    plt.figure(figsize=(16, 16))
+    plt.figure(figsize=(10, 8), dpi=300)
 
     if isinstance(x_data, np.ndarray):
         np_data = np.around(x_data.astype("float64"), 2)
@@ -24,17 +21,22 @@ def draw_heat_map(x_data, title, is_rotate, col_name):
         for j in range(np_data.shape[1]):
             plt.text(j, i, np_data[i, j], ha="center", va="center", color="w")
 
-    if is_rotate:
-        plt.xticks(np.arange(len(pd_data.columns.values)), col_name, rotation=-90)
+    if will_rotate:
+        plt.xticks(np.arange(len(col_list)), col_list, rotation=-90)
     else:
-        plt.xticks(np.arange(len(pd_data.columns.values)), col_name)
+        plt.xticks(np.arange(len(col_list)), col_list)
 
-    plt.yticks(np.arange(len(pd_data.index.values)), col_name)
+    plt.yticks(np.arange(len(col_list)), col_list)
     plt.imshow(np_data)
-    # plt.colorbar(False)
+    plt.colorbar(True)
     plt.tight_layout()
-    # plt.title(title)
 
-    plt.savefig("./diagram/{}.png".format(title), dpi=300)
+    plt.title(paint_object.get_name())
 
-    plt.show()
+    plt.xlabel(paint_object.get_x_cur_label())
+    plt.ylabel(paint_object.get_y_cur_label())
+
+    paint_object.set_color_cur_num(0)
+
+    return plt, paint_object
+

@@ -4,37 +4,24 @@ import matplotlib.pyplot as plt
 from static.config import Config
 
 
-# draw line graph
-def draw_line_graph(x_data, y_data: list, title):
-    plt.figure(figsize=(10, 8))
+def draw_line_graph(nums, labels, paint_object):
+    plt.figure(figsize=(10, 8), dpi=300)
 
     plt.plot(
-        x_data,
-        y_data,
+        nums,
+        labels,
         "-o",
-        color=Config.COLORS[0]
+        color=paint_object.get_color_cur_list()[0]
     )
 
-    plt.title(title)
-    plt.savefig("./diagram/{}.png".format(title), dpi=300)
+    plt.title(paint_object.get_name())
 
-    plt.show()
+    plt.xlabel(paint_object.get_x_cur_label())
+    plt.ylabel(paint_object.get_y_cur_label())
+
+    paint_object.set_color_cur_num(1)
+
+    return plt, paint_object
 
 
-def draw_line_graph_1(x_data, y_data: list, title, labels: list):
-    plt.figure(figsize=(10, 8))
 
-    for i, single_y_data in enumerate(y_data):
-        plt.plot(
-            x_data,
-            single_y_data,
-            "-o",
-            color=Config.COLORS[i],
-            label=labels[i]
-        )
-
-    plt.legend()
-    plt.title(title)
-    plt.savefig("./diagram/{}.png".format(title), dpi=300)
-
-    plt.show()

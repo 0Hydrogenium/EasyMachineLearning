@@ -48,6 +48,9 @@ def linear_regression(container: Container, model=None):
     elif model == "ElasticNet":
         linear_regression_model = ElasticNet(alpha=0.1, random_state=Config.RANDOM_STATE)
         params = LinearRegressionParams.get_params(model)
+    elif model == "LinearRegression":
+        linear_regression_model = LinearRegression()
+        params = LinearRegressionParams.get_params(model)
     else:
         linear_regression_model = LinearRegression()
         params = LinearRegressionParams.get_params(model)

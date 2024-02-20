@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from coding.llh.static.config import Config
+from static.config import Config
 
 
 def draw_histogram_line_subgraph(total_data_for_plot):

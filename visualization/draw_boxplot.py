@@ -1,26 +1,33 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
-from coding.llh.static.config import Config
+from static.config import Config
 
 
-# draw boxplot
-def draw_boxplot(x_data, title):
-    plt.figure(figsize=(10, 14))
+def draw_boxplot(x_data, paint_object, will_rotate=False):
+    plt.figure(figsize=(10, 8), dpi=300)
+
     plt.grid(True)
 
     plt.boxplot(
         x_data,
         meanline=True,
         showmeans=True,
-        medianprops={"color": Config.COLORS[0], "linewidth": 1.5},
-        meanprops={"color": Config.COLORS[1], "ls": "--", "linewidth": 1.5},
-        flierprops={"marker": "o", "markerfacecolor": Config.COLORS[2]},
+        medianprops={"color": paint_object.get_color_cur_list()[0], "linewidth": 1.5},
+        meanprops={"color": paint_object.get_color_cur_list()[1], "ls": "--", "linewidth": 1.5},
+        flierprops={"marker": "o", "markerfacecolor": paint_object.get_color_cur_list()[2]},
         labels=x_data.columns.values
     )
 
-    plt.xticks(rotation=-45)
-    plt.title(title)
+    if will_rotate:
+        plt.xticks(rotation=-45)
 
-    plt.savefig("./diagram/{}.png".format(title), dpi=300)
+    plt.title(paint_object.get_name())
 
-    plt.show()
+    plt.xlabel(paint_object.get_x_cur_label())
+    plt.ylabel(paint_object.get_y_cur_label())
+
+    paint_object.set_color_cur_num(3)
+
+    return plt, paint_object
+

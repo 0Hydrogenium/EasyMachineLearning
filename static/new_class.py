@@ -116,10 +116,27 @@ class SelectModel:
     def __init__(self):
         self.models = None
         self.waterfall_number = None
-        self.force_number_1 = None
-        self.force_number_2 = None
+        self.force_number = None
         self.beeswarm_plot_type = None
         self.dependence_col = None
+        self.data_distribution_col = None
+        self.data_distribution_is_rotate = None
+        self.descriptive_indicators_col = None
+        self.descriptive_indicators_is_rotate = None
+        self.heatmap_col = None
+        self.heatmap_is_rotate = None
+
+    def get_heatmap_col(self):
+        return self.heatmap_col
+
+    def set_heatmap_col(self, heatmap_col):
+        self.heatmap_col = heatmap_col
+
+    def get_heatmap_is_rotate(self):
+        return self.heatmap_is_rotate
+
+    def set_heatmap_is_rotate(self, heatmap_is_rotate):
+        self.heatmap_is_rotate = heatmap_is_rotate
 
     def get_models(self):
         return self.models
@@ -133,12 +150,11 @@ class SelectModel:
     def set_waterfall_number(self, waterfall_number):
         self.waterfall_number = waterfall_number
 
-    def get_force_numbers(self):
-        return self.force_number_1, self.force_number_2
+    def get_force_number(self):
+        return self.force_number
 
-    def set_force_numbers(self, force_number_1, force_number_2):
-        self.force_number_1 = force_number_1
-        self.force_number_2 = force_number_2
+    def set_force_number(self, force_number):
+        self.force_number = force_number
 
     def get_beeswarm_plot_type(self):
         return self.beeswarm_plot_type
@@ -151,5 +167,29 @@ class SelectModel:
 
     def set_dependence_col(self, dependence_col):
         self.dependence_col = dependence_col
+
+    def get_data_distribution_col(self):
+        return self.data_distribution_col
+
+    def set_data_distribution_col(self, data_distribution_col):
+        self.data_distribution_col = data_distribution_col
+
+    def get_data_distribution_is_rotate(self):
+        return self.data_distribution_is_rotate
+
+    def set_data_distribution_is_rotate(self, data_distribution_is_rotate):
+        self.data_distribution_is_rotate = data_distribution_is_rotate
+
+    def get_descriptive_indicators_is_rotate(self):
+        return self.descriptive_indicators_is_rotate
+
+    def set_descriptive_indicators_is_rotate(self, descriptive_indicators_is_rotate):
+        self.descriptive_indicators_is_rotate = descriptive_indicators_is_rotate
+
+    def get_descriptive_indicators_col(self):
+        return self.descriptive_indicators_col
+
+    def set_descriptive_indicators_col(self, descriptive_indicators_col):
+        self.descriptive_indicators_col = descriptive_indicators_col
 
 

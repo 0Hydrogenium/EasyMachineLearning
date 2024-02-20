@@ -236,8 +236,7 @@ def get_descriptive_indicators_related(df):
                                                                    descriptive_indicators_df["Upper Quartile"][col]
         descriptive_indicators_df["Kurtosis"][col] = df[col].kurt()
         descriptive_indicators_df["Skewness"][col] = df[col].skew()
-        descriptive_indicators_df["Coefficient of Variation"][col] = descriptive_indicators_df["Standard Deviation"][
-                                                                         col] \
+        descriptive_indicators_df["Coefficient of Variation"][col] = descriptive_indicators_df["Standard Deviation"][col] \
                                                                      / descriptive_indicators_df["Avg"][col]
 
     # draw_heat_map(descriptive_indicators_df.to_numpy(), "descriptive indicators", True)

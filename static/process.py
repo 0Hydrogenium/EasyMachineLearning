@@ -7,10 +7,10 @@ from skopt import BayesSearchCV
 import copy
 import pandas as pd
 from scipy.stats import spearmanr
+from io import StringIO
+from contextlib import redirect_stdout
 
-from sklearn.datasets import load_iris
-from sklearn.datasets import load_wine
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import load_iris, load_wine, load_breast_cancer, load_diabetes
 from scipy.linalg import eig
 
 from static.config import Config
@@ -175,20 +175,36 @@ def choose_y_col_in_dataframe(df: pd.DataFrame, y_col: str):
 
 
 def load_data(sort):
+    type = ""
     if sort == "Iris Dataset":
         sk_data = load_iris()
+        type = "classification"
     elif sort == "Wine Dataset":
         sk_data = load_wine()
+        type = "classification"
     elif sort == "Breast Cancer Dataset":
         sk_data = load_breast_cancer()
+        type = "classification"
+    elif sort == "Diabetes Dataset":
+        sk_data = load_diabetes()
+        type = "regression"
+    elif sort == "California Housing Dataset":
+        df = pd.read_csv("./data/fetch_california_housing.csv")
+        return df
+    else:
+        sk_data = load_iris()
+        type = "classification"
 
-    target_data = sk_data.target.astype(str)
-    for i in range(len(sk_data.target_names)):
-        target_data = np.where(target_data == str(i), sk_data.target_names[i], target_data)
+    if type == "classification":
+        target_data = sk_data.target.astype(str)
+        for i in range(len(sk_data.target_names)):
+            target_data = np.where(target_data == str(i), sk_data.target_names[i], target_data)
+    else:
+        target_data = sk_data.target
 
-    sk_feature_names = sk_data.feature_names
+    feature_names = sk_data.feature_names
+    sk_feature_names = ["target"] + feature_names.tolist() if isinstance(feature_names, np.ndarray) else ["target"] + feature_names
     sk_data = np.concatenate((target_data.reshape(-1, 1), sk_data.data), axis=1)
-    sk_feature_names = np.insert(sk_feature_names, 0, "species")
 
     df = pd.DataFrame(data=sk_data, columns=sk_feature_names)
 
@@ -283,10 +299,7 @@ def k_fold_cross_validation_data_segmentation(x_train, y_train):
 def grid_search(params, model, x_train, y_train, scoring=None):
     info = {}
 
-    if scoring == "neg_mean_squared_error":
-        grid_search_model = GridSearchCV(model, params, cv=5, scoring="neg_mean_squared_error")
-    else:
-        grid_search_model = GridSearchCV(model, params, cv=5)
+    grid_search_model = GridSearchCV(model, params, cv=3, n_jobs=-1)
 
     grid_search_model.fit(x_train, y_train.ravel())
 
@@ -300,10 +313,7 @@ def grid_search(params, model, x_train, y_train, scoring=None):
 def bayes_search(params, model, x_train, y_train, scoring=None):
     info = {}
 
-    if scoring == "neg_mean_squared_error":
-        bayes_search_model = BayesSearchCV(model, params, cv=5, n_iter=50, scoring="neg_mean_squared_error")
-    else:
-        bayes_search_model = BayesSearchCV(model, params, cv=5, n_iter=50)
+    bayes_search_model = BayesSearchCV(model, params, cv=3, n_iter=50, n_jobs=-1)
 
     bayes_search_model.fit(x_train, y_train)
 

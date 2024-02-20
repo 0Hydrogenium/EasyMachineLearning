@@ -12,12 +12,23 @@ from metrics.calculate_regression_metrics import calculate_regression_metrics
 
 class NaiveBayesClassifierParams:
     @classmethod
-    def get_params(cls):
-        return
+    def get_params(cls, sort):
+        if sort == "MultinomialNB":
+            return {
+                "alpha": [0.1, 0.5, 1.0, 2.0]
+            }
+        elif sort == "GaussianNB":
+            return {}
+        elif sort == "ComplementNB":
+            return {
+                "alpha": [0.1, 0.5, 1, 10],
+                "fit_prior": [True, False],
+                "norm": [True, False]
+            }
 
 
 # 朴素贝叶斯分类
-def naive_bayes_classification(container: Container):
+def naive_bayes_classification(container: Container, model=None):
     x_train = container.x_train
     y_train = container.y_train
     x_test = container.x_test
@@ -25,8 +36,18 @@ def naive_bayes_classification(container: Container):
     hyper_params_optimize = container.hyper_params_optimize
     info = {}
 
-    naive_bayes_model = GaussianNB()
-    params = NaiveBayesClassifierParams.get_params()
+    if model == "MultinomialNB":
+        naive_bayes_model = MultinomialNB()
+        params = NaiveBayesClassifierParams.get_params(model)
+    elif model == "GaussianNB":
+        naive_bayes_model = GaussianNB()
+        params = NaiveBayesClassifierParams.get_params(model)
+    elif model == "ComplementNB":
+        naive_bayes_model = ComplementNB()
+        params = NaiveBayesClassifierParams.get_params(model)
+    else:
+        naive_bayes_model = GaussianNB()
+        params = NaiveBayesClassifierParams.get_params(model)
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, naive_bayes_model, x_train, y_train)
@@ -58,26 +79,4 @@ def naive_bayes_classification(container: Container):
     container.set_model(best_model)
 
     return container
-
-
-
-# Naive bayes classification
-def naive_bayes_classification(x_train, y_train, x_test, y_test):
-    info = {}
-
-    # multinomial_naive_bayes_classification_model = MultinomialNB()
-    Gaussian_naive_bayes_classification_model = GaussianNB()
-    # bernoulli_naive_bayes_classification_model = BernoulliNB()
-    # complement_naive_bayes_classification_model = ComplementNB()
-
-    Gaussian_naive_bayes_classification_model.fit(x_train, y_train)
-
-    y_pred = Gaussian_naive_bayes_classification_model.predict(x_test).reshape(-1, 1)
-
-    # draw_scatter_line_graph(x_test, y_pred, y_test, lr_coef, lr_intercept, ["pred", "real"], "Gaussian naive bayes classification model residual plot")
-
-    info.update(calculate_regression_metrics(y_pred, y_test, "Gaussian naive bayes classification"))
-    info.update(calculate_classification_metrics(y_pred, y_test, "Gaussian naive bayes classification"))
-
-    return info
 

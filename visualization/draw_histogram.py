@@ -1,26 +1,27 @@
+import random
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-from coding.llh.static.config import Config
+from static.config import Config
+from static.new_class import PaintObject
 
 
-# Plot bar charts
-def draw_histogram(x_data, y_data, will_rotate, will_show_text, title):
-    fig, ax = plt.subplots(figsize=(10, 8))
+def draw_histogram(nums, labels, paint_object, will_rotate=False, will_show_text=True):
+    plt.figure(figsize=(10, 8), dpi=300)
 
     bars = plt.bar(
-        np.arange(0, len(x_data)),
-        x_data,
+        np.arange(0, len(nums)),
+        nums,
         align="center",
         alpha=1,
-        color=Config.COLORS,
-        tick_label=y_data
+        color=paint_object.get_color_cur_list()[0],
+        tick_label=labels
     )
 
-    # Bar annotation
     if will_show_text:
         for bar in bars:
-            ax.annotate(
+            plt.annotate(
                 str(bar.get_height()),
                 xy=(bar.get_x() + bar.get_width() / 2,
                     bar.get_height()),
@@ -31,10 +32,14 @@ def draw_histogram(x_data, y_data, will_rotate, will_show_text, title):
             )
 
     if will_rotate:
-        plt.xticks(rotation=-90)
+        plt.xticks(rotation=-45)
 
-    plt.title(title)
+    plt.title(paint_object.get_name())
 
-    plt.savefig("./diagram/{}.png".format(title), dpi=300)
+    plt.xlabel(paint_object.get_x_cur_label())
+    plt.ylabel(paint_object.get_y_cur_label())
 
-    plt.show()
+    paint_object.set_color_cur_num(1)
+
+    return plt, paint_object
+

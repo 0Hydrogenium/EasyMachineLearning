@@ -1,12 +1,10 @@
-import numpy as np
 from matplotlib import pyplot as plt
 
 from static.new_class import PaintObject
-from static.config import Config
 
 
 def draw_learning_curve_total(input_dict, paint_object: PaintObject):
-    plt.figure(figsize=(10, 6), dpi=300)
+    plt.figure(figsize=(10, 8), dpi=300)
 
     for i, values in enumerate(input_dict.values()):
         train_sizes = values[0]
@@ -51,9 +49,6 @@ def draw_learning_curve_total(input_dict, paint_object: PaintObject):
     plt.xlabel(paint_object.get_x_cur_label())
     plt.ylabel(paint_object.get_y_cur_label())
     plt.legend()
-
-    # plt.savefig("./diagram/{}.png".format(title), dpi=300)
-    # plt.show()
 
     paint_object.set_color_cur_num(2*len(input_dict.values()))
     paint_object.set_label_cur_num(2*len(input_dict.values()))

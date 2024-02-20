@@ -9,6 +9,23 @@ class Config:
     COLOR_ITER_NUM = 3
 
     COLORS = [
+        "#ca5353",
+        "#c874a5",
+        "#b674c8",
+        "#8274c8",
+        "#748dc8",
+        "#74acc8",
+        "#74c8b7",
+        "#74c88d",
+        "#a6c874",
+        "#e0e27e",
+        "#df9b77",
+        "#404040",
+        "#999999",
+        "#d4d4d4"
+    ] * COLOR_ITER_NUM
+
+    COLORS_0 = [
         "#8074C8",
         "#7895C1",
         "#A8CBDF",
@@ -76,6 +93,40 @@ class Config:
         "#CFCFD0",
         "#B6B3D6"
     ] * COLOR_ITER_NUM
+
+    JS_0 = """
+function createGradioAnimation() {
+    var container = document.createElement('div');
+    container.id = 'gradio-animation';
+    container.style.fontSize = '2em';
+    container.style.fontWeight = 'bold';
+    container.style.textAlign = 'center';
+    container.style.marginBottom = '20px';
+
+    var text = 'Welcome to EasyMachineLearning!';
+    for (var i = 0; i < text.length; i++) {
+        (function(i){
+            setTimeout(function(){
+                var letter = document.createElement('span');
+                letter.style.opacity = '0';
+                letter.style.transition = 'opacity 0.5s';
+                letter.innerText = text[i];
+
+                container.appendChild(letter);
+
+                setTimeout(function() {
+                    letter.style.opacity = '1';
+                }, 50);
+            }, i * 250);
+        })(i);
+    }
+
+    var gradioContainer = document.querySelector('.gradio-container');
+    gradioContainer.insertBefore(container, gradioContainer.firstChild);
+
+    return 'Animation created';
+}
+"""
 
 
 
