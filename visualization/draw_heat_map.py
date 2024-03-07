@@ -4,6 +4,7 @@ import pandas as pd
 
 
 def draw_heat_map(x_data, col_list, paint_object, will_rotate=False):
+    plt.clf()
     plt.rcParams.update({'figure.autolayout': True})
 
     plt.figure(figsize=(10, 8), dpi=300)

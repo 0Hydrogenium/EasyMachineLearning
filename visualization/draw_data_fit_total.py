@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 
 
 def draw_data_fit_total(input_dict, paint_object):
+    plt.clf()
     plt.figure(figsize=(10, 6), dpi=300)
 
     for i, input_dict_items in enumerate(input_dict.items()):

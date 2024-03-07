@@ -1180,10 +1180,10 @@ class Dataset:
         data_copy = cls.data
 
         if cls.assign == MN.classification:
-            gr.Info("分类任务请确保目标变量列(第一列)数值为字符型[有限个标签]")
+            # gr.Info("分类任务请确保目标变量列(第一列)数值为字符型[有限个标签]")
             data_copy.iloc[:, 0] = data_copy.iloc[:, 0].astype(str)
         else:
-            gr.Info("回归任务请确保目标变量列(第一列)数值为数值型")
+            # gr.Info("回归任务请确保目标变量列(第一列)数值为数值型")
             data_copy.iloc[:, 0] = data_copy.iloc[:, 0].astype(float)
 
         cls.data = data_copy

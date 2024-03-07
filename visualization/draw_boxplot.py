@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 
 
 def draw_boxplot(x_data, paint_object, will_rotate=False):
+    plt.clf()
     plt.figure(figsize=(10, 8), dpi=300)
 
     plt.grid(True)

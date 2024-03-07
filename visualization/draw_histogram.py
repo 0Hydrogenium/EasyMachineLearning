@@ -3,6 +3,7 @@ import numpy as np
 
 
 def draw_histogram(nums, labels, paint_object, will_rotate=False, will_show_text=True):
+    plt.clf()
     plt.figure(figsize=(10, 8), dpi=300)
 
     bars = plt.bar(

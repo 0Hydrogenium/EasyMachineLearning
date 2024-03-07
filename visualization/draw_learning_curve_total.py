@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 
 
 def draw_learning_curve_total(input_dict, paint_object):
+    plt.clf()
     plt.figure(figsize=(10, 8), dpi=300)
 
     for i, values in enumerate(input_dict.values()):
