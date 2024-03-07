@@ -21,7 +21,6 @@ class RandomForestRegressionParams:
             'max_depth': StaticValue.INT,
             'min_samples_split': StaticValue.INT,
             'min_samples_leaf': StaticValue.INT,
-            'random_state': StaticValue.INT
         }
 
     @classmethod
@@ -31,19 +30,18 @@ class RandomForestRegressionParams:
             'max_depth': [0, 10, 20, 30],
             'min_samples_split': [2, 5, 10],
             'min_samples_leaf': [1, 2, 4],
-            'random_state': [StaticValue.RANDOM_STATE]
         }
 
 
 # 随机森林回归
-def random_forest_regressor(container, params_list):
+def random_forest_regressor(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(RandomForestRegressionParams, params_list)
+    params = transform_params_list(RandomForestRegressionParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     random_forest_regression_model = RandomForestRegressor(n_estimators=5, random_state=StaticValue.RANDOM_STATE)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, random_forest_regression_model, x_train, y_train)
@@ -86,7 +84,6 @@ class DecisionTreeClassifierParams:
             "max_depth": StaticValue.INT,
             "min_samples_split": StaticValue.INT,
             "min_samples_leaf": StaticValue.INT,
-            'random_state': StaticValue.INT
         }
 
     @classmethod
@@ -97,19 +94,18 @@ class DecisionTreeClassifierParams:
             "max_depth": [0, 5, 10, 15],
             "min_samples_split": [2, 5, 10],
             "min_samples_leaf": [1, 2, 4],
-            'random_state': [StaticValue.RANDOM_STATE]
         }
 
 
 # 决策树分类
-def decision_tree_classifier(container, params_list):
+def decision_tree_classifier(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(DecisionTreeClassifierParams, params_list)
+    params = transform_params_list(DecisionTreeClassifierParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     random_forest_regression_model = DecisionTreeClassifier(random_state=StaticValue.RANDOM_STATE)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, random_forest_regression_model, x_train, y_train)
@@ -151,7 +147,6 @@ class RandomForestClassifierParams:
             "max_depth": StaticValue.INT,
             "min_samples_split": StaticValue.INT,
             "min_samples_leaf": StaticValue.INT,
-            "random_state": StaticValue.INT
         }
 
     @classmethod
@@ -162,19 +157,18 @@ class RandomForestClassifierParams:
             "max_depth": [0, 5, 10, 15],
             "min_samples_split": [2, 5, 10],
             "min_samples_leaf": [1, 2, 4],
-            "random_state": [StaticValue.RANDOM_STATE]
         }
 
 
 # 随机森林分类
-def random_forest_classifier(container, params_list):
+def random_forest_classifier(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(RandomForestClassifierParams, params_list)
+    params = transform_params_list(RandomForestClassifierParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     random_forest_classifier_model = RandomForestClassifier(n_estimators=5, random_state=StaticValue.RANDOM_STATE)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, random_forest_classifier_model, x_train, y_train)
@@ -219,7 +213,6 @@ class XgboostClassifierParams:
             "gamma": StaticValue.FLOAT,
             "subsample": StaticValue.FLOAT,
             "colsample_bytree": StaticValue.FLOAT,
-            "random_state": StaticValue.INT
         }
 
     @classmethod
@@ -232,19 +225,18 @@ class XgboostClassifierParams:
             "gamma": [0, 0.1, 0.2],
             "subsample": [0.5, 0.8, 0.9, 1.0],
             "colsample_bytree": [0.8, 0.9, 1.0],
-            "random_state": [StaticValue.RANDOM_STATE]
         }
 
 
 # xgboost分类
-def xgboost_classifier(container, params_list):
+def xgboost_classifier(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(XgboostClassifierParams, params_list)
+    params = transform_params_list(XgboostClassifierParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     xgboost_classifier_model = XGBClassifier(random_state=StaticValue.RANDOM_STATE)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, xgboost_classifier_model, x_train, y_train)
@@ -285,14 +277,14 @@ class LightGBMClassifierParams:
 
 
 # lightGBM分类
-def lightGBM_classifier(container, params_list):
+def lightGBM_classifier(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(LightGBMClassifierParams, params_list)
+    params = transform_params_list(LightGBMClassifierParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     lightgbm_classifier_model = lightGBMClassifier
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, lightgbm_classifier_model, x_train, y_train)

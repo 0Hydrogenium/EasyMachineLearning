@@ -17,7 +17,6 @@ class GradientBoostingParams:
             'max_depth': StaticValue.INT,
             'min_samples_split': StaticValue.INT,
             'min_samples_leaf': StaticValue.INT,
-            'random_state': StaticValue.INT
         }
 
     @classmethod
@@ -28,19 +27,18 @@ class GradientBoostingParams:
             'max_depth': [3, 5, 7],
             'min_samples_split': [2, 5, 10],
             'min_samples_leaf': [1, 2, 4],
-            'random_state': [StaticValue.RANDOM_STATE]
         }
 
 
 # 梯度提升回归
-def gradient_boosting_regressor(container, params_list):
+def gradient_boosting_regressor(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(GradientBoostingParams, params_list)
+    params = transform_params_list(GradientBoostingParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     gradient_boosting_regression_model = GradientBoostingRegressor(random_state=StaticValue.RANDOM_STATE)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, gradient_boosting_regression_model, x_train, y_train)

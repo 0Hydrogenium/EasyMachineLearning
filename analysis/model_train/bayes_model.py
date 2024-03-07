@@ -41,24 +41,24 @@ class NaiveBayesClassifierParams:
 
 
 # 朴素贝叶斯分类
-def naive_bayes_classifier(container, params_list, model=None):
+def naive_bayes_classifier(container, params, model=None):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(NaiveBayesClassifierParams, params_list, model)
+    params = transform_params_list(NaiveBayesClassifierParams, params, model)
 
     if model == "MultinomialNB":
         naive_bayes_model = MultinomialNB()
-        params = params_list
+        params = params
     elif model == "GaussianNB":
         naive_bayes_model = GaussianNB()
-        params = params_list
+        params = params
     elif model == "ComplementNB":
         naive_bayes_model = ComplementNB()
-        params = params_list
+        params = params
     else:
         naive_bayes_model = GaussianNB()
-        params = params_list
+        params = params
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, naive_bayes_model, x_train, y_train)

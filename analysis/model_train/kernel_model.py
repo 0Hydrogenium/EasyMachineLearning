@@ -31,14 +31,13 @@ class SVMRegressionParams:
 
 
 # 支持向量机回归
-def svm_regressor(container, params_list):
+def svm_regressor(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(SVMRegressionParams, params_list)
+    params = transform_params_list(SVMRegressionParams, params)
 
     svm_regression_model = SVR(kernel='rbf', C=100, gamma=0.1, epsilon=0.1)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, svm_regression_model, x_train, y_train)
@@ -79,7 +78,6 @@ class SVMClassifierParams:
             "C": StaticValue.FLOAT,
             "kernel": StaticValue.STR,
             "gamma": StaticValue.FLOAT,
-            'random_state': StaticValue.INT
         }
 
     @classmethod
@@ -88,19 +86,18 @@ class SVMClassifierParams:
             "C": [0.1, 1, 10, 100],
             "kernel": ['linear', 'rbf', 'poly'],
             "gamma": [0.1, 1, 10],
-            'random_state': [StaticValue.RANDOM_STATE]
         }
 
 
 # 支持向量机分类
-def svm_classifier(container, params_list):
+def svm_classifier(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(SVMClassifierParams, params_list)
+    params = transform_params_list(SVMClassifierParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     svm_classifier_model = SVC(kernel="rbf", random_state=StaticValue.RANDOM_STATE)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, svm_classifier_model, x_train, y_train)

@@ -23,7 +23,6 @@ class LinearRegressionParams:
             return {
                 "fit_intercept": StaticValue.BOOL,
                 "alpha": StaticValue.FLOAT,
-                "random_state": StaticValue.INT
             }
         else:
             return {
@@ -36,7 +35,6 @@ class LinearRegressionParams:
             return {
                 "fit_intercept": [True, False],
                 "alpha": [0.001, 0.01, 0.1, 1.0, 10.0],
-                "random_state": [StaticValue.RANDOM_STATE]
             }
         else:
             return {
@@ -45,27 +43,28 @@ class LinearRegressionParams:
 
 
 # 线性回归
-def linear_regressor(container, params_list, model=None):
+def linear_regressor(container, params, model=None):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    input_params = transform_params_list(LinearRegressionParams, params_list, model)
+    params = transform_params_list(LinearRegressionParams, params, model)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     if model == "Lasso":
         linear_regression_model = Lasso(alpha=0.1, random_state=StaticValue.RANDOM_STATE)
-        params = input_params
+        params = params
     elif model == "Ridge":
         linear_regression_model = Ridge(alpha=0.1, random_state=StaticValue.RANDOM_STATE)
-        params = input_params
+        params = params
     elif model == "ElasticNet":
         linear_regression_model = ElasticNet(alpha=0.1, random_state=StaticValue.RANDOM_STATE)
-        params = input_params
+        params = params
     elif model == "LinearRegression":
         linear_regression_model = LinearRegression()
-        params = input_params
+        params = params
     else:
         linear_regression_model = LinearRegression()
-        params = input_params
+        params = params
 
     try:
         if hyper_params_optimize == "grid_search":
@@ -126,18 +125,17 @@ class PolynomialRegressionParams:
 
 
 # 多项式回归
-def polynomial_regressor(container, params_list):
+def polynomial_regressor(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(PolynomialRegressionParams, params_list)
+    params = transform_params_list(PolynomialRegressionParams, params)
 
     polynomial_features = PolynomialFeatures(degree=2)
     linear_regression_model = LinearRegression()
 
     polynomial_regression_model = Pipeline([("polynomial_features", polynomial_features),
                                             ("linear_regression_model", linear_regression_model)])
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, polynomial_regression_model, x_train, y_train)
@@ -186,7 +184,6 @@ class LogisticRegressionParams:
             "C": StaticValue.FLOAT,
             "max_iter": StaticValue.INT,
             "solver": StaticValue.STR,
-            "random_state": StaticValue.INT
         }
 
     @classmethod
@@ -195,19 +192,18 @@ class LogisticRegressionParams:
             "C": [0.001, 0.01, 0.1, 1.0, 10.0],
             "max_iter": [100, 200, 300],
             "solver": ["liblinear", "lbfgs", "newton-cg", "sag", "saga"],
-            "random_state": [StaticValue.RANDOM_STATE]
         }
 
 
 # 逻辑斯谛分类
-def logistic_classifier(container, params_list):
+def logistic_classifier(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(LogisticRegressionParams, params_list)
+    params = transform_params_list(LogisticRegressionParams, params)
+    params['random_state'] = [StaticValue.RANDOM_STATE]
 
     logistic_regression_model = LogisticRegression(random_state=StaticValue.RANDOM_STATE)
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, logistic_regression_model, x_train, y_train)

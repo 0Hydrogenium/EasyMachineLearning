@@ -28,14 +28,13 @@ class KNNClassifierParams:
 
 
 # KNN分类
-def knn_classifier(container, params_list):
+def knn_classifier(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(KNNClassifierParams, params_list)
+    params = transform_params_list(KNNClassifierParams, params)
 
     knn_classifier_model = KNeighborsClassifier()
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, knn_classifier_model, x_train, y_train)
@@ -87,14 +86,13 @@ class KNNRegressionParams:
 
 
 # KNN回归
-def knn_regressor(container, params_list):
+def knn_regressor(container, params):
     x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    params_list = transform_params_list(KNNRegressionParams, params_list)
+    params = transform_params_list(KNNRegressionParams, params)
 
     knn_regression_model = KNeighborsRegressor()
-    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, knn_regression_model, x_train, y_train)
