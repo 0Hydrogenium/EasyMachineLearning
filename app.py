@@ -625,11 +625,13 @@ class Dataset:
 
     @classmethod
     def get_optimize_list(cls):
-        return ["无", "网格搜索", "贝叶斯优化"]
+        # return ["无", "网格搜索", "贝叶斯优化"]
+        return ["无", "网格搜索"]
 
     @classmethod
     def get_optimize_name_mapping(cls):
-        return dict(zip(cls.get_optimize_list(), ["None", "grid_search", "bayes_search"]))
+        # return dict(zip(cls.get_optimize_list(), ["None", "grid_search", "bayes_search"]))
+        return dict(zip(cls.get_optimize_list(), ["None", "grid_search"]))
 
     @classmethod
     def get_linear_regression_model_list(cls):
