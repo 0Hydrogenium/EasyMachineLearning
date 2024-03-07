@@ -1,28 +1,10 @@
-import copy
-
-import numpy as np
-import pandas as pd
-import skfuzzy.control.fuzzyvariable
-from sklearn.mixture import GaussianMixture
-
 from coding.llh.analysis.evaluation_model import *
-from coding.llh.analysis.gaussian_model import gaussian_mix
 from coding.llh.analysis.markov_model import train_and_predict_hidden_markov_model
 from coding.llh.analysis.poly_model import poly_fit
 from coding.llh.static.col import *
-from coding.llh.visualization.draw_learning_curve_total import draw_learning_curve_total
-from coding.llh.visualization.draw_momentum import draw_momentum
-from coding.llh.visualization.draw_parallel_coordinates import draw_parallel_coordinates
-from coding.llh.visualization.draw_play_flow import draw_play_flow
-from coding.llh.visualization.draw_roc_auc_curve_total import draw_roc_auc_curve_total
-from static.config import *
 from static.process import *
 from analysis.descriptive_analysis import *
 from analysis.exploratory_analysis import *
-from analysis.linear_model import *
-from analysis.tree_model import *
-from analysis.kernel_model import *
-from analysis.bayes_model import *
 from analysis.neural_model import *
 
 

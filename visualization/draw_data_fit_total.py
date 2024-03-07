@@ -1,11 +1,8 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from static.new_class import PaintObject
-from static.config import Config
 
-
-def draw_data_fit_total(input_dict, paint_object: PaintObject):
+def draw_data_fit_total(input_dict, paint_object):
     plt.figure(figsize=(10, 6), dpi=300)
 
     for i, input_dict_items in enumerate(input_dict.items()):

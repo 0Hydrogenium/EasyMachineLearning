@@ -1,13 +1,9 @@
-import copy
-
-from static.config import *
 from static.process import *
 from analysis.descriptive_analysis import *
 from analysis.exploratory_analysis import *
-from analysis.linear_model import *
-from analysis.tree_model import *
-from analysis.kernel_model import *
-from analysis.bayes_model import *
+from analysis.model_train.linear_model import *
+from analysis.model_train.tree_model import *
+from analysis.model_train.bayes_model import *
 from analysis.neural_model import *
 
 '''
@@ -86,11 +82,11 @@ train_and_validate_data_list = k_fold_cross_validation_data_segmentation(x_train
 # predictive_analysis_info.update(new_info)
 
 # Polynomial regression
-new_info = polynomial_regression(x_train_and_validate, y_train_and_validate, x_test, y_test, train_and_validate_data_list, "grid_search")
+new_info = polynomial_regressor(x_train_and_validate, y_train_and_validate, x_test, y_test, train_and_validate_data_list, "grid_search")
 predictive_analysis_info.update(new_info)
 
 # Logistic regression
-new_info = logistic_regression(x_train_and_validate, y_train_and_validate, x_test, y_test, train_and_validate_data_list, "grid_search")
+new_info = logistic_classifier(x_train_and_validate, y_train_and_validate, x_test, y_test, train_and_validate_data_list, "grid_search")
 predictive_analysis_info.update(new_info)
 
 '''
@@ -122,7 +118,7 @@ predictive_analysis_info.update(new_info)
 '''
 
 # Naive bayes classification
-new_info = naive_bayes_classification(x_train_and_validate, y_train_and_validate, x_test, y_test)
+new_info = naive_bayes_classifier(x_train_and_validate, y_train_and_validate, x_test, y_test)
 predictive_analysis_info.update(new_info)
 
 '''

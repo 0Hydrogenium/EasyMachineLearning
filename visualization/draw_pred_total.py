@@ -1,8 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from coding.llh.static.config import Config
-
 
 def draw_pred_total(input_dict):
     plt.figure(figsize=(10, 6))

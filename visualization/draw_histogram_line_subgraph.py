@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from static.config import Config
+from classes.static_custom_class import *
 
 
 def draw_histogram_line_subgraph(total_data_for_plot):
@@ -22,7 +22,7 @@ def draw_histogram_line_subgraph(total_data_for_plot):
                 data[1],
                 data[2],
                 "-o",
-                color=Config.COLORS[0],
+                color=StaticValue.COLORS[0],
                 markersize=4
             )
             ax[str(chr(i+65))].set_title(data[3])
@@ -33,7 +33,7 @@ def draw_histogram_line_subgraph(total_data_for_plot):
                 data[1],
                 align="center",
                 alpha=1,
-                color=Config.COLORS,
+                color=StaticValue.COLORS,
                 tick_label=data[2]
             )
 

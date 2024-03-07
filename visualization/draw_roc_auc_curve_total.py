@@ -1,9 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import *
-from sklearn.preprocessing import label_binarize
 
-from coding.llh.static.config import Config
+from classes.static_custom_class import *
 
 
 def draw_roc_auc_curve_total(input_dict, type):
@@ -20,7 +18,7 @@ def draw_roc_auc_curve_total(input_dict, type):
                 fpr,
                 tpr,
                 "o-",
-                color=Config.COLORS[i],
+                color=StaticValue.COLORS[i],
                 label=label_name+str(round(auc(fpr, tpr), 2))
             )
 
@@ -40,7 +38,7 @@ def draw_roc_auc_curve_total(input_dict, type):
                 fpr,
                 tpr,
                 "o-",
-                color=Config.COLORS[i],
+                color=StaticValue.COLORS[i],
                 label=label_name + str(round(auc(fpr, tpr), 2))
             )
 

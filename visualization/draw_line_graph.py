@@ -1,7 +1,4 @@
-import numpy as np
 import matplotlib.pyplot as plt
-
-from static.config import Config
 
 
 def draw_line_graph(nums, labels, paint_object):

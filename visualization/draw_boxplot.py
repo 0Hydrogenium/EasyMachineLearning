@@ -1,7 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
-
-from static.config import Config
 
 
 def draw_boxplot(x_data, paint_object, will_rotate=False):

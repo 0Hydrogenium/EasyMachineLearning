@@ -1,40 +1,49 @@
-from metrics.calculate_regression_metrics import calculate_regression_metrics
+import lightgbm as lightGBMClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import learning_curve
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
-import lightgbm as lightGBMClassifier
 
-from analysis.shap_model import *
+from analysis.others.shap_model import *
+from functions.process import get_values_from_container_class, transform_params_list
 from metrics.calculate_classification_metrics import calculate_classification_metrics
-from static.config import Config
-from static.process import grid_search, bayes_search
-from static.new_class import *
+from metrics.calculate_regression_metrics import calculate_regression_metrics
+from analysis.others.hyperparam_optimize import *
+from classes.static_custom_class import StaticValue
 
 
 class RandomForestRegressionParams:
     @classmethod
+    def get_params_type(cls):
+        return {
+            'n_estimators': StaticValue.INT,
+            'max_depth': StaticValue.INT,
+            'min_samples_split': StaticValue.INT,
+            'min_samples_leaf': StaticValue.INT,
+            'random_state': StaticValue.INT
+        }
+
+    @classmethod
     def get_params(cls):
         return {
             'n_estimators': [10, 50, 100, 200],
-            'max_depth': [None, 10, 20, 30],
+            'max_depth': [0, 10, 20, 30],
             'min_samples_split': [2, 5, 10],
-            'min_samples_leaf': [1, 2, 4]
+            'min_samples_leaf': [1, 2, 4],
+            'random_state': [StaticValue.RANDOM_STATE]
         }
 
 
 # 随机森林回归
-def random_forest_regression(container: Container):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def random_forest_regressor(container, params_list):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    random_forest_regression_model = RandomForestRegressor(n_estimators=5, random_state=Config.RANDOM_STATE)
-    params = RandomForestRegressionParams.get_params()
+    params_list = transform_params_list(RandomForestRegressionParams, params_list)
+
+    random_forest_regression_model = RandomForestRegressor(n_estimators=5, random_state=StaticValue.RANDOM_STATE)
+    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, random_forest_regression_model, x_train, y_train)
@@ -70,27 +79,37 @@ def random_forest_regression(container: Container):
 
 class DecisionTreeClassifierParams:
     @classmethod
+    def get_params_type(cls):
+        return {
+            "criterion": StaticValue.STR,
+            "splitter": StaticValue.STR,
+            "max_depth": StaticValue.INT,
+            "min_samples_split": StaticValue.INT,
+            "min_samples_leaf": StaticValue.INT,
+            'random_state': StaticValue.INT
+        }
+
+    @classmethod
     def get_params(cls):
         return {
             "criterion": ["gini", "entropy"],
             "splitter": ["best", "random"],
-            "max_depth": [None, 5, 10, 15],
+            "max_depth": [0, 5, 10, 15],
             "min_samples_split": [2, 5, 10],
-            "min_samples_leaf": [1, 2, 4]
+            "min_samples_leaf": [1, 2, 4],
+            'random_state': [StaticValue.RANDOM_STATE]
         }
 
 
 # 决策树分类
-def decision_tree_classifier(container: Container):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def decision_tree_classifier(container, params_list):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    random_forest_regression_model = DecisionTreeClassifier(random_state=Config.RANDOM_STATE)
-    params = DecisionTreeClassifierParams.get_params()
+    params_list = transform_params_list(DecisionTreeClassifierParams, params_list)
+
+    random_forest_regression_model = DecisionTreeClassifier(random_state=StaticValue.RANDOM_STATE)
+    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, random_forest_regression_model, x_train, y_train)
@@ -125,27 +144,37 @@ def decision_tree_classifier(container: Container):
 
 class RandomForestClassifierParams:
     @classmethod
+    def get_params_type(cls):
+        return {
+            "criterion": StaticValue.STR,
+            "n_estimators": StaticValue.INT,
+            "max_depth": StaticValue.INT,
+            "min_samples_split": StaticValue.INT,
+            "min_samples_leaf": StaticValue.INT,
+            "random_state": StaticValue.INT
+        }
+
+    @classmethod
     def get_params(cls):
         return {
             "criterion": ["gini", "entropy"],
             "n_estimators": [50, 100, 150],
-            "max_depth": [None, 5, 10, 15],
+            "max_depth": [0, 5, 10, 15],
             "min_samples_split": [2, 5, 10],
-            "min_samples_leaf": [1, 2, 4]
+            "min_samples_leaf": [1, 2, 4],
+            "random_state": [StaticValue.RANDOM_STATE]
         }
 
 
 # 随机森林分类
-def random_forest_classifier(container: Container):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def random_forest_classifier(container, params_list):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    random_forest_classifier_model = RandomForestClassifier(n_estimators=5, random_state=Config.RANDOM_STATE)
-    params = RandomForestClassifierParams.get_params()
+    params_list = transform_params_list(RandomForestClassifierParams, params_list)
+
+    random_forest_classifier_model = RandomForestClassifier(n_estimators=5, random_state=StaticValue.RANDOM_STATE)
+    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, random_forest_classifier_model, x_train, y_train)
@@ -181,6 +210,19 @@ def random_forest_classifier(container: Container):
 
 class XgboostClassifierParams:
     @classmethod
+    def get_params_type(cls):
+        return {
+            "n_estimators": StaticValue.INT,
+            "learning_rate": StaticValue.FLOAT,
+            "max_depth": StaticValue.INT,
+            "min_child_weight": StaticValue.INT,
+            "gamma": StaticValue.FLOAT,
+            "subsample": StaticValue.FLOAT,
+            "colsample_bytree": StaticValue.FLOAT,
+            "random_state": StaticValue.INT
+        }
+
+    @classmethod
     def get_params(cls):
         return {
             "n_estimators": [50, 100, 150],
@@ -189,21 +231,20 @@ class XgboostClassifierParams:
             "min_child_weight": [1, 2, 3],
             "gamma": [0, 0.1, 0.2],
             "subsample": [0.5, 0.8, 0.9, 1.0],
-            "colsample_bytree": [0.8, 0.9, 1.0]
+            "colsample_bytree": [0.8, 0.9, 1.0],
+            "random_state": [StaticValue.RANDOM_STATE]
         }
 
 
 # xgboost分类
-def xgboost_classifier(container: Container):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def xgboost_classifier(container, params_list):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
-    xgboost_classifier_model = XGBClassifier(random_state=Config.RANDOM_STATE)
-    params = XgboostClassifierParams.get_params()
+    params_list = transform_params_list(XgboostClassifierParams, params_list)
+
+    xgboost_classifier_model = XGBClassifier(random_state=StaticValue.RANDOM_STATE)
+    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, xgboost_classifier_model, x_train, y_train)
@@ -244,16 +285,14 @@ class LightGBMClassifierParams:
 
 
 # lightGBM分类
-def lightGBM_classifier(container: Container):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def lightGBM_classifier(container, params_list):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
+    params_list = transform_params_list(LightGBMClassifierParams, params_list)
+
     lightgbm_classifier_model = lightGBMClassifier
-    params = LightGBMClassifierParams.get_params()
+    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, lightgbm_classifier_model, x_train, y_train)

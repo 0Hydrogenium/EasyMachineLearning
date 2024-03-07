@@ -1,9 +1,4 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import *
-from sklearn.preprocessing import label_binarize
-
-from coding.llh.static.config import Config
 
 
 def draw_swings_and_positives(df, p1_name, p2_name):

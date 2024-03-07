@@ -1,9 +1,7 @@
 from matplotlib import pyplot as plt
 
-from static.new_class import PaintObject
 
-
-def draw_learning_curve_total(input_dict, paint_object: PaintObject):
+def draw_learning_curve_total(input_dict, paint_object):
     plt.figure(figsize=(10, 8), dpi=300)
 
     for i, values in enumerate(input_dict.values()):

@@ -1,8 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-
-from static.config import Config
 
 
 def draw_heat_map(x_data, col_list, paint_object, will_rotate=False):
@@ -28,8 +26,8 @@ def draw_heat_map(x_data, col_list, paint_object, will_rotate=False):
 
     plt.yticks(np.arange(len(col_list)), col_list)
     plt.imshow(np_data)
-    plt.colorbar(True)
-    plt.tight_layout()
+    plt.colorbar()
+    # plt.tight_layout()
 
     plt.title(paint_object.get_name())
 

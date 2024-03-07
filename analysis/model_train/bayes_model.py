@@ -1,16 +1,29 @@
+import numpy as np
 from sklearn.model_selection import learning_curve
 from sklearn.naive_bayes import *
-import numpy as np
+from analysis.others.hyperparam_optimize import *
+from classes.static_custom_class import StaticValue
+from functions.process import transform_params_list, get_values_from_container_class
 
-from static.new_class import Container
-from static.process import grid_search, bayes_search
-from visualization.draw_line_graph import draw_line_graph
-from visualization.draw_scatter_line_graph import draw_scatter_line_graph
 from metrics.calculate_classification_metrics import calculate_classification_metrics
-from metrics.calculate_regression_metrics import calculate_regression_metrics
 
 
 class NaiveBayesClassifierParams:
+    @classmethod
+    def get_params_type(cls, sort):
+        if sort == "MultinomialNB":
+            return {
+                "alpha": StaticValue.FLOAT
+            }
+        elif sort == "GaussianNB":
+            return {}
+        elif sort == "ComplementNB":
+            return {
+                "alpha": StaticValue.FLOAT,
+                "fit_prior": StaticValue.BOOL,
+                "norm": StaticValue.BOOL
+            }
+
     @classmethod
     def get_params(cls, sort):
         if sort == "MultinomialNB":
@@ -28,26 +41,24 @@ class NaiveBayesClassifierParams:
 
 
 # 朴素贝叶斯分类
-def naive_bayes_classification(container: Container, model=None):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def naive_bayes_classifier(container, params_list, model=None):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
+
+    params_list = transform_params_list(NaiveBayesClassifierParams, params_list, model)
 
     if model == "MultinomialNB":
         naive_bayes_model = MultinomialNB()
-        params = NaiveBayesClassifierParams.get_params(model)
+        params = params_list
     elif model == "GaussianNB":
         naive_bayes_model = GaussianNB()
-        params = NaiveBayesClassifierParams.get_params(model)
+        params = params_list
     elif model == "ComplementNB":
         naive_bayes_model = ComplementNB()
-        params = NaiveBayesClassifierParams.get_params(model)
+        params = params_list
     else:
         naive_bayes_model = GaussianNB()
-        params = NaiveBayesClassifierParams.get_params(model)
+        params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, naive_bayes_model, x_train, y_train)

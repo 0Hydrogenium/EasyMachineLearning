@@ -1,7 +1,5 @@
-import pandas as pd
 import matplotlib.pyplot as plt
-
-from coding.llh.static.config import Config
+import pandas as pd
 
 
 def draw_parallel_coordinates(df):

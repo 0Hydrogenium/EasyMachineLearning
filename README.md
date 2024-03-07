@@ -1,5 +1,5 @@
 ---
-title: EasyMachineLearning test
+title: EasyMachineLearning
 emoji: 🔥
 colorFrom: red
 colorTo: red

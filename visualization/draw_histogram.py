@@ -1,10 +1,5 @@
-import random
-
-import numpy as np
 import matplotlib.pyplot as plt
-
-from static.config import Config
-from static.new_class import PaintObject
+import numpy as np
 
 
 def draw_histogram(nums, labels, paint_object, will_rotate=False, will_show_text=True):

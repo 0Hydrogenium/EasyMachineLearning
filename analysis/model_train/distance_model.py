@@ -1,14 +1,23 @@
 from sklearn.model_selection import learning_curve
-
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from analysis.shap_model import *
+
+from analysis.others.shap_model import *
+from classes.static_custom_class import StaticValue
+from functions.process import get_values_from_container_class, transform_params_list
 from metrics.calculate_classification_metrics import calculate_classification_metrics
 from metrics.calculate_regression_metrics import calculate_regression_metrics
-from static.new_class import *
-from static.process import grid_search, bayes_search
+from analysis.others.hyperparam_optimize import *
 
 
 class KNNClassifierParams:
+    @classmethod
+    def get_params_type(cls):
+        return {
+            "n_neighbors": StaticValue.INT,
+            "weights": StaticValue.STR,
+            "p": StaticValue.INT
+        }
+
     @classmethod
     def get_params(cls):
         return {
@@ -19,16 +28,14 @@ class KNNClassifierParams:
 
 
 # KNN分类
-def knn_classifier(container: Container):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def knn_classifier(container, params_list):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
+    params_list = transform_params_list(KNNClassifierParams, params_list)
+
     knn_classifier_model = KNeighborsClassifier()
-    params = KNNClassifierParams.get_params()
+    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, knn_classifier_model, x_train, y_train)
@@ -63,6 +70,14 @@ def knn_classifier(container: Container):
 
 class KNNRegressionParams:
     @classmethod
+    def get_params_type(cls):
+        return {
+            "n_neighbors": StaticValue.INT,
+            "weights": StaticValue.STR,
+            "p": StaticValue.INT
+        }
+
+    @classmethod
     def get_params(cls):
         return {
             "n_neighbors": [3, 5, 7, 9],
@@ -72,16 +87,14 @@ class KNNRegressionParams:
 
 
 # KNN回归
-def knn_regression(container: Container):
-    x_train = container.x_train
-    y_train = container.y_train
-    x_test = container.x_test
-    y_test = container.y_test
-    hyper_params_optimize = container.hyper_params_optimize
+def knn_regressor(container, params_list):
+    x_train, y_train, x_test, y_test, hyper_params_optimize = get_values_from_container_class(container)
     info = {}
 
+    params_list = transform_params_list(KNNRegressionParams, params_list)
+
     knn_regression_model = KNeighborsRegressor()
-    params = KNNRegressionParams.get_params()
+    params = params_list
 
     if hyper_params_optimize == "grid_search":
         best_model = grid_search(params, knn_regression_model, x_train, y_train)
