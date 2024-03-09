@@ -3,6 +3,9 @@ def get_values_from_container_class(container):
 
 
 def transform_params_list(params_class, params_list, model=None):
+    # test
+    print("params_class: {}, params_list: {}".format(str(params_class), str(params_list)))
+
     input_params_keys = []
     input_params_values = []
     inner_value_list = []
@@ -18,21 +21,24 @@ def transform_params_list(params_class, params_list, model=None):
             inner_value_list.append(param)
     else:
         input_params_values.append(inner_value_list)
-    input_params = dict(zip(input_params_keys, input_params_values))
+    params = dict(zip(input_params_keys, input_params_values))
 
-    for k, v in input_params.items():
+    for k, v in params.items():
         if k in keys:
             value_type = params_class.get_params_type(model)[k] if model else params_class.get_params_type()[k]
             try:
                 if value_type == "int":
-                    input_params[k] = [int(x) for x in input_params[k]]
+                    params[k] = [int(x) for x in params[k]]
                 elif value_type == "float":
-                    input_params[k] = [float(x) for x in input_params[k]]
+                    params[k] = [float(x) for x in params[k]]
                 elif value_type == "bool":
-                    input_params[k] = [x == "True" for x in input_params[k]]
+                    params[k] = [x == "True" for x in params[k]]
                 elif value_type == "str":
-                    input_params[k] = [str(x) for x in input_params[k]]
+                    params[k] = [str(x) for x in params[k]]
             except Exception:
-                input_params[k] = [str(x) for x in input_params[k]]
+                params[k] = [str(x) for x in params[k]]
 
-    return input_params
+    # test
+    print("params: {}".format(str(params)))
+
+    return params
