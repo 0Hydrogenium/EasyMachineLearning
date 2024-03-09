@@ -7,7 +7,7 @@ from classes.static_custom_class import StaticValue
 
 def draw_shap_beeswarm(model, x, feature_names, type, paint_object):
     plt.clf()
-    x = shap.sample(x, min(123, len(x)), random_state=StaticValue.RANDOM_STATE)
+    x = shap.sample(x, min(60, len(x)), random_state=StaticValue.RANDOM_STATE)
     explainer = shap.KernelExplainer(model.predict, x)
     shap_values = explainer(x)
 
@@ -21,7 +21,7 @@ def draw_shap_beeswarm(model, x, feature_names, type, paint_object):
 
 def draw_waterfall(model, x, feature_names, number, paint_object):
     plt.clf()
-    x = shap.sample(x, min(123, len(x)), random_state=StaticValue.RANDOM_STATE)
+    x = shap.sample(x, min(60, len(x)), random_state=StaticValue.RANDOM_STATE)
     explainer = shap.KernelExplainer(model.predict, x, feature_names=feature_names)
     shap_values = explainer(x)
 
@@ -48,7 +48,7 @@ def draw_force(model, x, feature_names, number, paint_object):
 
 def draw_dependence(model, x, feature_names, col, paint_object):
     plt.clf()
-    x = shap.sample(x, min(123, len(x)), random_state=StaticValue.RANDOM_STATE)
+    x = shap.sample(x, min(60, len(x)), random_state=StaticValue.RANDOM_STATE)
     explainer = shap.KernelExplainer(model.predict, x, feature_names=feature_names)
     shap_values = explainer(x)
 
