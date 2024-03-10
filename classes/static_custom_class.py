@@ -1,5 +1,7 @@
 # 全局静态变量值存储类
 class StaticValue:
+    # SHAP抽样数量
+    SAMPLE_NUM = 20
     # 超参数文本框的最大组件数量
     MAX_PARAMS_NUM = 60
     # 颜色和标签显示的最大组件数量
@@ -145,6 +147,11 @@ class MN:  # ModelName
     knn_regressor = "knn regressor"
     naive_bayes_classifier = "naive bayes classifier"
     # 模型Step 4:在这里添加新的模型名称
+
+    none = "None"
+    grid_search = "grid_search"
+    bayes_search = "bayes_search"
+
 
     # [绘图]
     data_distribution = "data_distribution"

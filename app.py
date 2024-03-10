@@ -356,8 +356,15 @@ class Dataset:
 
     @classmethod
     def check_model_optimize_radio(cls):
-        if cls.choose_optimize != "None" and cls.choose_optimize:
-            return True
+        if cls.cur_model and cls.choose_optimize != MN.none and cls.choose_optimize:
+            if cls.cur_model == MN.linear_regressor:
+                if cls.linear_regression_model_type:
+                    return True
+            elif cls.cur_model == MN.naive_bayes_classifier:
+                if cls.naive_bayes_classifier_model_type:
+                    return True
+            else:
+                return True
         return False
 
     @classmethod
@@ -386,6 +393,9 @@ class Dataset:
         # 模型Step 15:在这里添加新的模型额外组件
 
         cls.container_dict = get_container_dict()
+
+        cls.visualize = ""
+        cls.choose_optimize = ""
 
     @classmethod
     def check_descriptive_indicators_df(cls):
@@ -630,8 +640,8 @@ class Dataset:
 
     @classmethod
     def get_optimize_name_mapping(cls):
-        # return dict(zip(cls.get_optimize_list(), ["None", "grid_search", "bayes_search"]))
-        return dict(zip(cls.get_optimize_list(), ["None", "grid_search"]))
+        # return dict(zip(cls.get_optimize_list(), [MN.none, MN.grid_search, MN.bayes_search]))
+        return dict(zip(cls.get_optimize_list(), [MN.none, MN.grid_search]))
 
     @classmethod
     def get_linear_regression_model_list(cls):
@@ -1202,10 +1212,10 @@ class Dataset:
 
     @classmethod
     def get_model_train_input_params(cls):
-        EACH_ROW_NUM = 6 - 1
+        EACH_ROW_NUM = 6
         output_list = []
 
-        if cls.cur_model and cls.choose_optimize:
+        if cls.check_model_optimize_radio():
             output_dict = ChooseModelParams.choose(cls.cur_model)
             row_unit_num_list = []
             row_len = len(output_dict.keys())
@@ -1225,17 +1235,21 @@ class Dataset:
                      for k in range(cumulative_sum, cumulative_sum + row_unit_num_list[j])]
                 )
                 return_list.extend(
-                    [gr.Textbox(visible=False)] * (EACH_ROW_NUM - row_unit_num_list[j])
+                    [gr.Textbox(visible=False)] * (EACH_ROW_NUM - 1 - row_unit_num_list[j])
                 )
 
                 cumulative_sum += row_unit_num_list[j]
 
-            return_list.extend([gr.Textbox(visible=False)] * (StaticValue.MAX_PARAMS_NUM - row_len - cumulative_sum))
+            print("row_len: {}".format(row_len))
+            print(StaticValue.MAX_PARAMS_NUM - EACH_ROW_NUM * row_len)
+            return_list.extend(
+                [gr.Textbox(visible=False)] * (StaticValue.MAX_PARAMS_NUM - EACH_ROW_NUM * row_len)
+            )
 
             return return_list
 
         else:
-            return [gr.Textbox(visible=False)] * StaticValue.MAX_PARAMS_NUM
+            return [gr.Textbox("", visible=False)] * StaticValue.MAX_PARAMS_NUM
 
     @classmethod
     def color_textboxs_change(cls, paint_object):
@@ -1531,12 +1545,12 @@ def get_return(is_visible, extra_gr_dict: dict = None):
             data_fit_button: gr.Button(LN.data_fit_button, visible=Dataset.check_before_train()),
             waterfall_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(),
                                       label=LN.waterfall_radio),
-            waterfall_number: gr.Slider(0, Dataset.get_total_row_num(), value=0, step=1,
+            waterfall_number: gr.Slider(0, StaticValue.SAMPLE_NUM, value=0, step=1,
                                         visible=Dataset.check_before_train(), label=LN.waterfall_number),
             waterfall_button: gr.Button(LN.waterfall_button, visible=Dataset.check_before_train()),
             force_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(),
                                   label=LN.force_radio),
-            force_number: gr.Slider(0, Dataset.get_total_row_num(), value=0, step=1,
+            force_number: gr.Slider(0, StaticValue.SAMPLE_NUM, value=0, step=1,
                                     visible=Dataset.check_before_train(), label=LN.force_number),
             force_button: gr.Button(LN.force_button, visible=Dataset.check_before_train()),
             dependence_radio: gr.Radio(Dataset.get_trained_model_list(), visible=Dataset.check_before_train(),
@@ -1787,9 +1801,10 @@ def non_first_draw_plot(inputs, is_color_text):
 
     # 若输入的是颜色的十六进制，则判断输入是否合法
     for color in color_list:
-        if len(color) != 7 or color[0] != "#":
-            gr.Warning("颜色的十六进制输入有误")
-            return get_return(True)
+        if color:
+            if len(color) != 7 or color[0] != "#":
+                gr.Warning("颜色的十六进制输入有误")
+                return get_return(True)
 
     # [绘图]
     if Dataset.visualize == MN.learning_curve:
@@ -1991,12 +2006,12 @@ def choose_custom_dataset(file: str):
 def select_model_optimize_radio(optimize):
     optimize = Dataset.get_optimize_name_mapping()[optimize]
 
-    if optimize == "grid_search":
-        Dataset.choose_optimize = "grid_search"
-    elif optimize == "bayes_search":
-        Dataset.choose_optimize = "bayes_search"
-    elif optimize == "None":
-        Dataset.choose_optimize = "None"
+    if optimize == MN.grid_search:
+        Dataset.choose_optimize = MN.grid_search
+    elif optimize == MN.bayes_search:
+        Dataset.choose_optimize = MN.bayes_search
+    elif optimize == MN.none:
+        Dataset.choose_optimize = MN.none
 
     return get_return(True)
 
@@ -2417,7 +2432,7 @@ with gr.Blocks(js="./design/welcome.js", css="./design/custom.css") as demo:
         outputs=get_outputs()
     )
 
-    # 数据模型
+    # 选择模型类型
     select_as_model_radio.change(
         fn=select_as_model,
         inputs=[select_as_model_radio],
